@@ -1,0 +1,8 @@
+inherit_gem:
+  rubocop-shopify: rubocop.yml
+require:
+  - rubocop-sorbet
+# AllCops:
+#   TargetRubyVersion: 2.6
+Sorbet:
+  Enabled: true
