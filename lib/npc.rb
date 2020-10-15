@@ -92,7 +92,7 @@ module NPC
   end
 end
 
-require 'npc/boot'
-require 'npc/lang'
-require 'npc/meta'
-require 'npc/sexpr'
+require("npc/boot")
+require("npc/lang")
+require("npc/meta")
+require("npc/sexpr")

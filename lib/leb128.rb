@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require("sorbet-runtime")
-require("pry")
 
 module ULEB128
   extend T::Sig

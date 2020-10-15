@@ -56,10 +56,10 @@ module NPC
   end
 end
 
-require("./boot/builder")
-require("./boot/ir_builder")
-require("./boot/lang_builder")
-require("./boot/lang")
-require("./boot/op_builder")
-require("./boot/op")
-require("./boot/pass_builder")
+require("npc/boot/builder")
+require("npc/boot/ir_builder")
+require("npc/boot/lang_builder")
+require("npc/boot/lang")
+require("npc/boot/op_builder")
+require("npc/boot/op")
+require("npc/boot/pass_builder")
