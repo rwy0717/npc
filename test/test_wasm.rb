@@ -77,15 +77,17 @@ class WasmTest < Minitest::Test
   def test_empty_module
     m = WASM::ModuleWriter.new
 
-    add = m.func(m.type([:i32, :i32], :i32))
+    m.func(m.type([:i32, :i32], :i32))
       .export("add")
       .local(:i64, 1)
       .local_get(0)
       .local_get(1)
       .i32_add
+      .i32_const(42)
+      .i32_add
       .return
 
-    sub = m.func(m.type([:i32, :i32], :i32))
+    m.func(m.type([:i32, :i32], :i32))
       .export("sub")
       .export("sub_by_another_name_wouldst_decrement_as_sweet")
       .local(:i64, 2)
