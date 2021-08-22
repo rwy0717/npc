@@ -143,10 +143,11 @@ module WASM
       write_section(out, :import, content)
     end
 
-    def write_import(data, import)
+    def write_import(_out, _import)
+      return if @imports.empty?
     end
 
-    def write_import_desc(out, desc)
+    def write_import_desc(_out, _desc)
     end
 
     #### Func Section
@@ -167,7 +168,38 @@ module WASM
 
     #### Table Section
 
-    def write_table_section(data)
+    sig { returns(T::Array[Table]) }
+    attr_reader :tables
+
+    sig { params(out: String).returns(ModuleWriter) }
+    def write_table_section(out)
+      content = String.new
+      write_uint(content, tables.length)
+      @tables.each do |table_type|
+        write_table_type(content, table_type)
+      end
+      write_section(out, :table, content)
+      self
+    end
+
+    sig { params(out: String, table_type: TableType).returns(ModuleWriter) }
+    def write_table_type(out, table_type)
+      write_limits(out, table_type.limits)
+      write_type_code(out, table_type.elem_type)
+      self
+    end
+
+    sig { params(out: String, lim: Limits).returns(ModuleWriter) }
+    def write_limits(out, lim)
+      max = lim.max
+      if max
+        write_uint(out, 1)
+        write_uint(out, lim.min)
+        write_uint(out, max)
+      else
+        write_uint(out, 0)
+      end
+      self
     end
 
     #### Memory Section

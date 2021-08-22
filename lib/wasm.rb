@@ -3,6 +3,7 @@
 
 require("leb128")
 require("sorbet-runtime")
+
 require("wasm/constants.rb")
 require("wasm/export.rb")
 require("wasm/func_type_table.rb")

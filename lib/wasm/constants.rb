@@ -5,6 +5,7 @@ module WASM
   extend T::Sig
 
   MAGIC = T.let("\x00\x61\x73\x6d", String)
+
   VERSION = T.let("\x01\x00\x00\x00", String)
 
   SECTION_CODES = T.let({
