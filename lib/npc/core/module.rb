@@ -9,8 +9,8 @@ module NPC
       sig do
         params(
           location: Location,
-          name: String,
-          region: Region,
+          _name: String,
+          _region: Region,
         ).void
       end
       def initialize(location, _name, _region = Region.new)

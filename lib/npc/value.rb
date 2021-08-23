@@ -33,13 +33,13 @@ module NPC
       first_use.nil?
     end
 
-    ## Does this have any uses?
+    # Does this have any uses?
     sig { returns(T::Boolean) }
     def used?
       first_use != nil
     end
 
-    ## Does this have exactly one use?
+    # Does this have exactly one use?
     sig { returns(T::Boolean) }
     def used_once?
       use = first_use
@@ -50,7 +50,7 @@ module NPC
       end
     end
 
-    ## An enumerable collection of all uses.
+    # An enumerable collection of all uses.
     sig { returns(Uses) }
     def uses
       Uses.new(self)
