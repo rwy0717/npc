@@ -4,8 +4,8 @@
 module NPC
   # An adapter for iterating the uses of a value.
   class Uses
+    extend T::Sig
     extend T::Generic
-    include Base
     include Enumerable
 
     Elem = type_member(fixed: Use)
@@ -17,7 +17,7 @@ module NPC
 
     sig do
       override
-        .params(blk: T.proc.params(arg0: Use).returns(BasicObject))
+        .params(blk: T.proc.params(arg0: Use).void)
         .returns(Uses)
     end
     def each(&blk)

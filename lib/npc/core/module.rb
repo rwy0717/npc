@@ -4,7 +4,7 @@
 module NPC
   module Core
     class Module < Op
-      include Base
+      extend T::Sig
 
       sig do
         params(

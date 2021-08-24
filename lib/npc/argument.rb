@@ -2,10 +2,13 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("npc/value")
+require("npc/located")
+
 module NPC
   # An argument to a block.
   class Argument < Value
-    include Base
+    extend T::Sig
     include Located
 
     sig do
@@ -16,6 +19,7 @@ module NPC
       ).void
     end
     def initialize(location, block, index)
+      super()
       @location = T.let(location, Location)
       @block = T.let(block, Block)
       @index = T.let(index, Integer)

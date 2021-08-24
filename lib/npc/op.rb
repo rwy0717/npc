@@ -1,10 +1,11 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "npc/in_block"
+
 module NPC
   # A base class for implementing operation.
   class Op < InBlock
-    include Base
     include Operation
 
     sig do
@@ -19,6 +20,7 @@ module NPC
       operands:,
       results:
     )
+      super()
       @location = T.let(location, Location)
       @operands = T.let(operands, T::Array[Operand])
       @results  = T.let(results,  T::Array[Result])

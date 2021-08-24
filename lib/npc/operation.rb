@@ -1,10 +1,17 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("npc/base")
+require("npc/located")
+require("npc/operand")
+require("npc/result")
+
 module NPC
   ## The base class for all operations in NPC.
   module Operation
-    include Base
+    extend T::Sig
+    extend T::Helpers
+
     include Located
 
     abstract!

@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("sorbet-runtime")
+
 module NPC
   module Base
     extend T::Sig

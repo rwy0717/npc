@@ -1,10 +1,12 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "npc/in_block"
+
 module NPC
   # The root/dummy node of a block's op list.
   class BlockSentinel < InBlock
-    include T::Sig
+    extend T::Sig
 
     sig { void }
     def initialize

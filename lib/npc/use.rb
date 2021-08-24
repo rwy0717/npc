@@ -4,9 +4,9 @@
 module NPC
   # A use of a value. Uses are arranged into a linked-list.
   class Use
-    include Base
+    extend T::Sig
 
-    sig { params(value: T.nilable(Value)).void }
+    sig { params(value: T.nilable(Value)).void.checked(:never) }
     def initialize(value = nil)
       @prev_use = T.let(nil, T.nilable(Use))
       @next_use = T.let(nil, T.nilable(Use))
@@ -23,6 +23,12 @@ module NPC
     # The value this is using.
     sig { returns(T.nilable(Value)) }
     attr_reader :value
+
+    sig { returns(T.nilable(Use)) }
+    attr_accessor :prev_use
+
+    sig { returns(T.nilable(Use)) }
+    attr_accessor :next_use
 
     # The value this is using. Throws if value is nil.
     sig { returns(Value) }
@@ -55,17 +61,29 @@ module NPC
     sig { void }
     def drop
       return if @value.nil?
+
+      if @value.first_use == self
+        @value.first_use = @next_use
+      end
+
       @prev_use.next_use = @next_use if @prev_use
       @next_use.prev_use = @prev_use if @next_use
+
+      clear
+    end
+
+    # Turn this use into an enumerable sequence of uses.
+    sig { returns(Uses) }
+    def to_uses
+      Uses.new(self)
+    end
+
+    # UNSAFE: clear the prev, next, and value.
+    sig { void }
+    def clear
       @prev_use = nil
       @next_use = nil
       @value = nil
     end
-
-    sig { returns(T.nilable(Use)) }
-    attr_accessor :prev_use
-
-    sig { returns(T.nilable(Use)) }
-    attr_accessor :next_use
   end
 end

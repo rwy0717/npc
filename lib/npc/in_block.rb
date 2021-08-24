@@ -4,7 +4,7 @@
 module NPC
   # An IR entity that belongs to a block.
   class InBlock
-    include Base
+    extend T::Sig
 
     sig do
       params(
@@ -32,14 +32,12 @@ module NPC
 
     sig { returns(T.nilable(Operation)) }
     def prev_operation
-      p = prev_link
-      p.to_operation if p
+      prev_link&.to_operation
     end
 
     sig { returns(T.nilable(Operation)) }
     def next_operation
-      n = next_link
-      n.to_operation if n
+      next_link&.to_operation
     end
   end
 end

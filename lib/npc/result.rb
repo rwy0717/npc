@@ -1,10 +1,12 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("npc/value")
+
 module NPC
   # The result of an operation. An operation may have more than one result.
   class Result < Value
-    include Base
+    extend T::Sig
     include Located
 
     sig do

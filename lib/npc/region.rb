@@ -3,10 +3,10 @@
 
 module NPC
   class Region
-    include Base
+    extend T::Sig
 
     class << self
-      include Base
+      extend T::Sig
 
       sig { params(block: T.nilable(Block)).returns(Region) }
       def with_block(block)

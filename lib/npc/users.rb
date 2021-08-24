@@ -7,7 +7,7 @@ module NPC
   ## For example, an add op that uses the same constant twice.
   # class Users
   #   extend T::Generic
-  #   include Base
+  #
   #   include Enumerable
 
   #   Elem = type_member(fixed: Operand)

@@ -1,10 +1,15 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("npc/argument")
+require("npc/base")
+require("npc/linked_list")
+require("npc/operation")
+
 module NPC
   # A basic block.
   class Block < LinkedList
-    include Base
+    extend T::Sig
 
     Elem = type_member(fixed: Operation)
 

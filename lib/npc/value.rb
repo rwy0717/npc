@@ -1,10 +1,12 @@
 # typed: strict
 # frozen_string_literal: true
 
+require("npc/base")
+
 module NPC
   # A value that can be referenced or used within IR.
   class Value
-    include Base
+    extend T::Sig
 
     sig { params(first_use: T.nilable(Use)).void }
     def initialize(first_use = nil)
@@ -20,14 +22,7 @@ module NPC
       nil
     end
 
-    ## The users of this.
-
-    # sig { params(other: Usable) }
-    # def replace_all_uses
-    #   # TODO
-    # end
-
-    ## Does this have no uses?
+    # Does this have no uses?
     sig { returns(T::Boolean) }
     def unused?
       first_use.nil?
@@ -54,6 +49,32 @@ module NPC
     sig { returns(Uses) }
     def uses
       Uses.new(first_use)
+    end
+
+    # All uses as an array.
+    sig { returns(T::Array[Use]) }
+    def uses_array
+      uses.to_a
+    end
+
+    # Drop all uses.
+    sig { void }
+    def drop_all_uses
+      use = T.let(@first_use, T.nilable(Use))
+      while use
+        tmp = use
+        use = use.next_use
+        tmp.clear
+      end
+      @first_use = nil
+    end
+
+    # Replace all uses of this value, with a different value.
+    sig { params(other: T.nilable(Value)).void }
+    def replace_all_uses(other)
+      uses.each do |use|
+        use.value = other
+      end
     end
   end
 end

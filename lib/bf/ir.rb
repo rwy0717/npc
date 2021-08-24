@@ -22,17 +22,27 @@ module BF
     end
 
     class Inc < BaseOp; end
+
     class Dec < BaseOp; end
+
     class MoveL < BaseOp; end
+
     class MoveR < BaseOp; end
+
     class LoopL < BaseOp; end
+
     class LoopR < BaseOp; end
+
     class Print < BaseOp; end
 
     class Add < BaseOp; end
+
     class Sub < BaseOp; end
+
     class Store < BaseOp; end
+
     class Load < BaseOp; end
+
     class Move < BaseOp; end
   end
 end
