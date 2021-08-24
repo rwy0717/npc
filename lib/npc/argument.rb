@@ -29,7 +29,7 @@ module NPC
     sig { returns(Block) }
     attr_reader :block
 
-    ## The argument index.
+    # The argument index.
     sig { returns(Integer) }
     attr_reader :index
 

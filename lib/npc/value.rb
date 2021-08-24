@@ -50,16 +50,10 @@ module NPC
       end
     end
 
-    # An enumerable collection of all uses.
+    # An enumerable collection of all uses of this value.
     sig { returns(Uses) }
     def uses
-      Uses.new(self)
+      Uses.new(first_use)
     end
-
-    ## An enumerable collection of all users (which must be operations).
-    # sig { returns(Users) }
-    # def users
-    #   Users.new(self)
-    # end
   end
 end

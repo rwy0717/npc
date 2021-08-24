@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 module NPC
-  ## A sequence of uses of an IR entity.
+  # An adapter for iterating the uses of a value.
   class Uses
     extend T::Generic
     include Base
@@ -10,30 +10,24 @@ module NPC
 
     Elem = type_member(fixed: Use)
 
-    prop :next_use, T.nilable(Use), default: nil
-
-    sig { params(value: Value).void }
-    def initialize(value)
-      @next_use = T.let(value.first_use, T.nilable(Use))
+    sig { params(head: T.nilable(Use)).void }
+    def initialize(head)
+      @head = T.let(head, T.nilable(Use))
     end
 
     sig do
       override
-        .params(block: T.proc.params(arg0: Elem).returns(BasicObject))
-        .returns(T.untyped)
+        .params(blk: T.proc.params(arg0: Use).returns(BasicObject))
+        .returns(Uses)
     end
-    def each(&block)
-      use = T.let(first, T.nilable(Use))
-      while use
-        next_use = use.next_use
-        block.call(use)
-        use = next_use
+    def each(&blk)
+      head = T.let(head, T.nilable(Use))
+      while head
+        tail = head.next_use
+        blk.call(head)
+        head = tail
       end
-    end
-
-    sig { void }
-    def clear_all_uses
-      each(&:clear)
+      self
     end
   end
 end

@@ -22,22 +22,5 @@ module NPC
     # The operation that this operand is a part of.
     sig { returns(Operation) }
     attr_reader :operation
-
-    # Set the value that this operand points to.
-    sig do
-      params(
-        x: T.nilable(Value)
-      ).returns(T.nilable(Value))
-    end
-    def value=(x)
-      drop
-      @value = x
-    end
-
-    # Clear the value this operand points to.
-    sig { override.void }
-    def clear
-      self.value = nil
-    end
   end
 end

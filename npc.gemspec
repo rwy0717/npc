@@ -10,6 +10,7 @@ Gem::Specification.new do |spec|
   spec.email       = 'rwy0717@gmail.com'
   spec.homepage    = 'https://rubygems.org/gems/npc'
   spec.license = 'DO NOT USE OR DISTRIBUTE'
+  spec.required_ruby_version = "~> 2.6"
   spec.files       = [
     "lib/leb128.rb"
     "lib/npc.rb",

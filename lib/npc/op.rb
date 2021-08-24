@@ -30,7 +30,21 @@ module NPC
     sig { override.returns(T::Array[Operand]) }
     attr_reader :operands
 
+    sig { params(value: T.nilable(Value)).returns(Operand) }
+    def new_operand(value = nil)
+      operand = Operand.new(self, operands.length, value)
+      operands << operand
+      operand
+    end
+
     sig { override.returns(T::Array[Result]) }
     attr_reader :results
+
+    sig { returns(Result) }
+    def new_result
+      r = Result.new(self, results.length)
+      results << r
+      r
+    end
   end
 end

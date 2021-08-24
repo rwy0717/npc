@@ -11,14 +11,20 @@ module NPC
       @prev_use = T.let(nil, T.nilable(Use))
       @next_use = T.let(nil, T.nilable(Use))
       @value    = T.let(nil, T.nilable(Value))
-      use(value) if value
+
+      return unless value
+
+      @next_use = value.first_use
+      @next_use.prev_use = self if @next_use
+      value.first_use = self
+      self.value = value
     end
 
-    # The value of this operand.
+    # The value this is using.
     sig { returns(T.nilable(Value)) }
     attr_reader :value
 
-    # The value of this operand. Throws if value is nil.
+    # The value this is using. Throws if value is nil.
     sig { returns(Value) }
     def value!
       T.must(value)
@@ -31,21 +37,29 @@ module NPC
       ).returns(T.nilable(Value))
     end
     def value=(value)
-      clear
-      use(value) if value
-      value
+      drop
+      return nil unless value
+      @next_use = value.first_use
+      @next_use.prev_use = self if @next_use
+      value.first_use = self
+      @value = value
     end
 
     # True if this use points at a value.
     sig { returns(T::Boolean) }
     def value?
-      value != nil
+      @value != nil
     end
 
-    # Clear this usage, removing this value.
+    # Clear this use. The value is cleared, and this use is removed from the value's use-list.
     sig { void }
-    def clear
-      drop if value?
+    def drop
+      return if @value.nil?
+      @prev_use.next_use = @next_use if @prev_use
+      @next_use.prev_use = @prev_use if @next_use
+      @prev_use = nil
+      @next_use = nil
+      @value = nil
     end
 
     sig { returns(T.nilable(Use)) }
@@ -53,33 +67,5 @@ module NPC
 
     sig { returns(T.nilable(Use)) }
     attr_accessor :next_use
-
-    private
-
-    sig { params(value: Value).void }
-    def use(value)
-      insert_into(value.uses)
-      @value = value
-    end
-
-    sig { params(list: Uses).void }
-    def insert_into(list)
-      self.prev_use = nil
-      self.next_use = list.first
-      n = next_use
-      n.prev_use = self if n
-    end
-
-    # Remove this usage and clear.
-    sig { void }
-    def drop
-      p = prev_use
-      n = next_use
-      p.next_use = n if p
-      n.prev_use = p if n
-      self.prev_use = nil
-      self.next_use = nil
-      @value = nil
-    end
   end
 end
