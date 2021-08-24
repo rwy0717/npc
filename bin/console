@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# typed: false
+# frozen_string_literal: true
+
+# 1: set up bundler
+require "rubygems"
+require "bundler"
+
+Bundler.setup(
+  :default,
+  :development,
+  :test,
+)
+
+# require "bundler/setup"
+
+require "sorbet-runtime"
+
+# 2: load our code
+require "npc"
+
+# 3: Extra helpers and debug utilities
+require "objspace"
+require "pry"
+require "pry-byebug"
+
+# 4: Hacks and other garbage
+include NPC
+extend T::Sig
+
+def mkop(operands = [], results = [])
+  Op.new(
+    location: UnknownLocation.new,
+    operands: operands,
+    results: results,
+  )
+end
+
+def mkoperand(op = mkop, value = nil, index: 0)
+  Operand.new(
+    op, index, value
+  )
+end
+
+# 5: gogogogogo
+# Pry.start
+
+mkoperand
