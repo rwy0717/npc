@@ -3,9 +3,8 @@
 
 module NPC
   module Core
-    class I32Const < Op
+    class I32Const < Operation
       extend T::Sig
-      include Operation
       include Const
 
       sig { params(location: Location, value: Integer).void }

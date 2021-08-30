@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "npc/base"
+
 module NPC
   module Location
     extend T::Sig
@@ -8,7 +10,7 @@ module NPC
     interface!
   end
 
-  class UnknownLocation
+  class UnknownLocation < T::Struct
     extend T::Sig
     include Location
   end

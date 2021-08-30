@@ -4,45 +4,30 @@ module BF
   module IR
     # Base IR
 
-    class BaseOp < NPC::Op
-      include NPC::Base
+    class Operation < NPC::Operation; end
 
-      sig do
-        params(
-          location: NPC::Location
-        ).void
-      end
-      def initialize(location)
-        super(
-          location: location,
-          operands: [],
-          results: [],
-        )
-      end
-    end
+    class Inc < Operation; end
 
-    class Inc < BaseOp; end
+    class Dec < Operation; end
 
-    class Dec < BaseOp; end
+    class MoveL < Operation; end
 
-    class MoveL < BaseOp; end
+    class MoveR < Operation; end
 
-    class MoveR < BaseOp; end
+    class LoopL < Operation; end
 
-    class LoopL < BaseOp; end
+    class LoopR < Operation; end
 
-    class LoopR < BaseOp; end
+    class Print < Operation; end
 
-    class Print < BaseOp; end
+    class Add < Operation; end
 
-    class Add < BaseOp; end
+    class Sub < Operation; end
 
-    class Sub < BaseOp; end
+    class Store < Operation; end
 
-    class Store < BaseOp; end
+    class Load < Operation; end
 
-    class Load < BaseOp; end
-
-    class Move < BaseOp; end
+    class Move < Operation; end
   end
 end

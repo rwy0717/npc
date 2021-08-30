@@ -3,7 +3,7 @@
 
 module NPC
   module Core
-    class Function < Op
+    class Function < Operation
       extend T::Sig
 
       sig do

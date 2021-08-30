@@ -28,5 +28,10 @@ module NPC
     # The index of this operand in the operation.
     sig { returns(Integer) }
     attr_reader :index
+
+    sig { returns(String) }
+    def to_s
+      "(operand #{value})"
+    end
   end
 end

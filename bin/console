@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# typed: false
+# typed: strict
 # frozen_string_literal: true
 
 # 1: set up bundler
@@ -14,7 +14,7 @@ Bundler.setup(
 
 # require "bundler/setup"
 
-require "sorbet-runtime"
+# require "sorbet-runtime"
 
 # 2: load our code
 require "npc"
@@ -28,14 +28,26 @@ require "pry-byebug"
 include NPC
 extend T::Sig
 
+sig do
+  params(
+    operands: T::Array[Operand],
+    results: T::Array[Result],
+  ).returns(Operation)
+end
 def mkop(operands = [], results = [])
-  Op.new(
-    location: UnknownLocation.new,
+  Operation.new(
     operands: operands,
     results: results,
   )
 end
 
+sig do
+  params(
+    op: Operation,
+    value: Value,
+    index: Integer,
+  ).returns(Operand)
+end
 def mkoperand(op = mkop, value = nil, index: 0)
   Operand.new(
     op, index, value
@@ -43,6 +55,6 @@ def mkoperand(op = mkop, value = nil, index: 0)
 end
 
 # 5: gogogogogo
-# Pry.start
-
-mkoperand
+# AwesomePrint.pry!
+# AwesomePrint.irb!
+Pry.start

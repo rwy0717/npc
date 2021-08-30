@@ -3,8 +3,6 @@
 
 module NPC
   module Core
-    class I32 < Type
-      extend T::Sig
-    end
+    I32 = T.let(Type.new, Type)
   end
 end

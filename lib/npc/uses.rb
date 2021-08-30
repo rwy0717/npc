@@ -10,22 +10,27 @@ module NPC
 
     Elem = type_member(fixed: Use)
 
-    sig { params(head: T.nilable(Use)).void }
-    def initialize(head)
-      @head = T.let(head, T.nilable(Use))
+    sig { params(use: T.nilable(Use)).void }
+    def initialize(use = nil)
+      @use = T.let(use, T.nilable(Use))
+    end
+
+    sig { params(use: T.nilable(Use)).void }
+    def reset(use)
+      @use = use
     end
 
     sig do
       override
-        .params(blk: T.proc.params(arg0: Use).void)
+        .params(proc: T.proc.params(arg0: Use).void)
         .returns(Uses)
     end
-    def each(&blk)
-      head = T.let(head, T.nilable(Use))
-      while head
-        tail = head.next_use
-        blk.call(head)
-        head = tail
+    def each(&proc)
+      use = T.let(@use, T.nilable(Use))
+      while use
+        n = use.next_use
+        proc.call(use)
+        use = n
       end
       self
     end

@@ -8,47 +8,28 @@ module NPC
 
     sig { params(value: T.nilable(Value)).void.checked(:never) }
     def initialize(value = nil)
+      @value = T.let(value, T.nilable(Value))
       @prev_use = T.let(nil, T.nilable(Use))
       @next_use = T.let(nil, T.nilable(Use))
-      @value    = T.let(nil, T.nilable(Value))
 
-      return unless value
-
-      @next_use = value.first_use
-      @next_use.prev_use = self if @next_use
-      value.first_use = self
-      self.value = value
+      if value
+        first = value.first_use
+        value.first_use = self
+        if first
+          @next_use = first
+          first.prev_use = self
+        end
+      end
     end
 
     # The value this is using.
     sig { returns(T.nilable(Value)) }
     attr_reader :value
 
-    sig { returns(T.nilable(Use)) }
-    attr_accessor :prev_use
-
-    sig { returns(T.nilable(Use)) }
-    attr_accessor :next_use
-
     # The value this is using. Throws if value is nil.
     sig { returns(Value) }
     def value!
       T.must(value)
-    end
-
-    # Point this use at a new value, or clear this use by assigning nil.
-    sig do
-      params(
-        value: T.nilable(Value)
-      ).returns(T.nilable(Value))
-    end
-    def value=(value)
-      drop
-      return nil unless value
-      @next_use = value.first_use
-      @next_use.prev_use = self if @next_use
-      value.first_use = self
-      @value = value
     end
 
     # True if this use points at a value.
@@ -57,10 +38,26 @@ module NPC
       @value != nil
     end
 
-    # Clear this use. The value is cleared, and this use is removed from the value's use-list.
+    sig { returns(T.nilable(Use)) }
+    attr_accessor :prev_use
+
+    sig { returns(T.nilable(Use)) }
+    attr_accessor :next_use
+
+    # Attach this usage to a value.
+    sig { params(value: Value).void }
+    def insert_into_value!(value)
+      raise "use already attached to value" unless @value.nil?
+
+      @next_use = value.first_use
+      @next_use.prev_use = self if @next_use
+      value.first_use = self
+    end
+
+    # Remove this usage from it's value.
     sig { void }
-    def drop
-      return if @value.nil?
+    def remove_from_value!
+      raise "use not attached to value" unless @value != nil
 
       if @value.first_use == self
         @value.first_use = @next_use
@@ -69,21 +66,22 @@ module NPC
       @prev_use.next_use = @next_use if @prev_use
       @next_use.prev_use = @prev_use if @next_use
 
-      clear
-    end
-
-    # Turn this use into an enumerable sequence of uses.
-    sig { returns(Uses) }
-    def to_uses
-      Uses.new(self)
-    end
-
-    # UNSAFE: clear the prev, next, and value.
-    sig { void }
-    def clear
+      @value = nil
       @prev_use = nil
       @next_use = nil
-      @value = nil
+    end
+
+    # Reset this use to target a new value.
+    sig { params(value: T.nilable(Value)).void }
+    def value=(value)
+      remove_from_value! if value?
+      insert_into_value!(value) if value
+    end
+
+    # Clear this use.
+    sig { void }
+    def drop!
+      remove_from_value! if value?
     end
   end
 end

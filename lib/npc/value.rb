@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require("npc/base")
+# require("npc/operation")
 
 module NPC
   # A value that can be referenced or used within IR.
@@ -53,28 +54,27 @@ module NPC
 
     # All uses as an array.
     sig { returns(T::Array[Use]) }
-    def uses_array
+    def uses_a
       uses.to_a
     end
 
-    # Drop all uses.
+    # Drop all uses. All uses of this value will be cleared.
     sig { void }
-    def drop_all_uses
-      use = T.let(@first_use, T.nilable(Use))
-      while use
-        tmp = use
-        use = use.next_use
-        tmp.clear
-      end
-      @first_use = nil
+    def drop_uses!
+      uses.each(&:remove_from_value!)
     end
 
-    # Replace all uses of this value, with a different value.
+    # Replace all uses of this value with a different value.
     sig { params(other: T.nilable(Value)).void }
-    def replace_all_uses(other)
+    def replace_uses!(other)
       uses.each do |use|
         use.value = other
       end
+    end
+
+    sig { returns(String) }
+    def to_s
+      "(value #{object_id}))"
     end
   end
 end
