@@ -4,6 +4,8 @@
 require("npc/use")
 
 module NPC
+  class Use; end
+
   # A reference to a value, used by an operation.
   class Operand < Use
     extend T::Sig

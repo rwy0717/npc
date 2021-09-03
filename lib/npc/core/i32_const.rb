@@ -10,7 +10,7 @@ module NPC
       sig { params(location: Location, value: Integer).void }
       def initialize(location, value)
         super(
-          location,
+          location: location,
           operands: [],
           results: [Result.new(self, 0)]
         )

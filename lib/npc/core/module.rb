@@ -23,7 +23,7 @@ module NPC
         )
 
         @body_region = T.let(Region.new(operation: self), Region)
-        @body_region.append_block(Block.new)
+        @body_region.append_block!(Block.new)
       end
 
       sig { returns(Region) }

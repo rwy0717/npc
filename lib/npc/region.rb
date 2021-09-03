@@ -75,37 +75,7 @@ module NPC
       operation: nil # The parent operation of this region.
     )
       @operation = T.let(operation, T.nilable(Operation))
-      @block_root = T.let(BlockSentinel.new(self), BlockSentinel)
-    end
-
-    # The sentinel node of the linked list of blocks in this region.
-    sig { returns(BlockSentinel) }
-    attr_reader :sentinel
-
-    # The link before the first block.
-    # Can be used as an insertion point for prepending blocks.
-    # Works even if the region is empty.
-    sig { returns(BlockLink) }
-    def beginning
-      sentinel
-    end
-
-    # The link after the last block.
-    # Can be used as an insertion point for appending blocks.
-    # Works even if the region is empty.
-    sig { returns(BlockLink) }
-    def end
-      sentinel.prev_link!
-    end
-
-    sig { returns(T.nilable(Block)) }
-    def first_block
-      sentinel.next_block
-    end
-
-    sig { returns(T.nilable(Block)) }
-    def last_block
-      sentinel.prev_block
+      @sentinel = T.let(BlockSentinel.new(self), BlockSentinel)
     end
 
     # The parent/containing operation of this region.
@@ -128,21 +98,37 @@ module NPC
       T.must(parent_region)
     end
 
-    ## Block Management
+    ### Block Management
 
-    sig { returns(T::Boolean) }
-    def empty?
-      sentinel.next_block == sentinel
+    # The link before the first block.
+    # Can be used as an insertion point for prepending blocks.
+    # Works even if the region is empty.
+    sig { returns(BlockLink) }
+    def front
+      @sentinel
+    end
+
+    # The link after the last block.
+    # Can be used as an insertion point for appending blocks.
+    # Works even if the region is empty.
+    sig { returns(BlockLink) }
+    def back
+      @sentinel.prev_link!
     end
 
     sig { returns(T.nilable(Block)) }
     def first_block
-      sentinel.next_block
+      @sentinel.next_block
     end
-   
+
     sig { returns(T.nilable(Block)) }
     def last_block
-      sentinel.prev_block
+      @sentinel.prev_block
+    end
+
+    sig { returns(T::Boolean) }
+    def empty?
+      @sentinel.next_link == @sentinel
     end
 
     sig { returns(BlocksInRegion) }
@@ -150,31 +136,31 @@ module NPC
       BlocksInRegion.new(@first_block)
     end
 
-    ## Insert a block into this region.
+    ## Insert a block at the beginning of this region.
     sig { params(block: Block).returns(Region) }
-    def append_block(block)
-      block.insert_into_region!(beginning)
+    def prepend_block!(block)
+      block.insert_into_region!(front)
       self
     end
 
-    ## Insert a block at the beginning of this region.
-    sig { params(block: Block).returns(Block) }
-    def prepend_block(block)
-      block.insert_into_region!(beginning)
-      block
+    ## Insert a block into this region.
+    sig { params(block: Block).returns(Region) }
+    def append_block!(block)
+      block.insert_into_region!(back)
+      self
     end
-  
-    ## Remove a block from this region. Returns the removed block.
-    sig { params(block: Block).returns(Block) }
-    def remove_block(block)
+
+    ## Remove a block from this region.
+    sig { params(block: Block).returns(Region) }
+    def remove_block!(block)
       raise "block is not a child of this region" if self != block.region
       block.remove_from_region!
-      block
+      self
     end
 
     ### Region Arguments
 
-    ## Arguments of this region. Derived from the arguments of the entry block.
+    ## Arguments of this region. Derived from the arguments of the first block.
     sig { returns(T::Array[Argument]) }
     def arguments
       first_block&.arguments || []

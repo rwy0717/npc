@@ -16,8 +16,8 @@ module NPC
 
       ## Construct a new builder with the insertion point set to the end of the block.
       sig { params(block: Block).returns(OperationBuilder) }
-      def block_end(block)
-        OperationBuilder.new(at: block.end)
+      def block_back(block)
+        OperationBuilder.new(at: block.back)
       end
     end
 
@@ -32,9 +32,7 @@ module NPC
     # Block of the current insertion point.
     # If the op
     sig { returns(T.nilable(Block)) }
-    def block
-      @block
-    end
+    attr_reader :block
 
     # Get a copy of the current insertion point.
     sig { returns(OperationLink) }
@@ -67,13 +65,6 @@ module NPC
     # end
 
     ## Operation Creation
-
-    # Insert the op at the current insertion point and move the insertion point forwards. Returns the inserted op.
-    sig { params(op: Operation).returns(Operation) }
-    def insert(op)
-      op.insert_into_block!(@point)
-      @point = op
-    end
 
     # Create a new op and insert it. Returns the new op.
     # sig do

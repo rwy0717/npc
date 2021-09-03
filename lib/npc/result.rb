@@ -15,7 +15,7 @@ module NPC
       ).void
     end
     def initialize(operation, index)
-      super
+      super()
       @operation = T.let(operation, Operation)
       @index = T.let(index, Integer)
     end

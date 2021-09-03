@@ -3,39 +3,42 @@
 
 # require "npc/operator"
 
-# module NPC
-#   # An enumerable list of users.
-#   # May report the same user multiple time, if the user has multiple uses.
-#   # For example, an add op that uses the same constant twice.
-#   class Users
-#     extend T::Sig
-#     extend T::Generic
+module NPC
+  # An adapter for iterating the users of a value.
+  class Users
+    extend T::Sig
+    extend T::Generic
+    include Enumerable
 
-#     include Enumerable
+    Elem = type_member(fixed: Operation)
 
-#     Elem = type_member(fixed: Operator)
+    class << self
+      extend T::Sig
 
-#     prop :uses, Uses
+      sig { params(value: Value).returns(Users) }
+      def of(value)
+        Users.new(value.first_use)
+      end
+    end
 
-#     sig { params(subject: Value).void }
-#     def initialize(subject)
-#       self.uses = subject.uses
-#     end
+    sig { params(use: T.nilable(Use)).void }
+    def initialize(use)
+      @use = T.let(use, T.nilable(Use))
+    end
 
-#     sig do
-#       params(
-#         block: T.proc.params(
-#           arg0: Operator,
-#         ).returns(BasicObject)
-#       ).returns(Users)
-#     end
-#     def each(&block)
-#       uses.each do |use|
-#         case use
-#         when Operand
-#           use.operation
-#         end
-#       end
-#     end
-#   end
-# end
+    sig do
+      override.params(
+          proc: T.proc.params(arg0: Operation).void
+      ).returns(Users)
+    end
+    def each(&proc)
+      Uses.new(@use).each do |use|
+        case use
+        when Operand
+          proc.call(use.operation)
+        end
+      end
+      self
+    end
+  end
+end

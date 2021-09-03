@@ -131,7 +131,7 @@ module NPC
       sig { params(region: Region, arg_tys: T::Array[Type]).returns(Block) }
       def in_region(region, arg_tys = [])
         block = Block.new(argument_types: arg_tys)
-        block.insert_into_region!(region.end)
+        block.insert_into_region!(region.back)
         block
       end
     end
@@ -183,9 +183,10 @@ module NPC
     ## Insert this block into a region.
     sig { params(cursor: BlockLink).void }
     def insert_into_region!(cursor)
-      raise "block already in region" unless @region.nil? && @prev_link.nil? && @next_link.nil?
-  
-      @region     = T.must(cursor.region)
+      raise "block already in region" if
+        @region || @prev_link || @next_link
+
+      @region = T.must(cursor.region)
       @prev_link = cursor
       @next_link = cursor.next_link!
 
@@ -235,31 +236,67 @@ module NPC
       a
     end
 
-    ### Operations Within the Block.
+    ### Operation Management
 
+    ## The link before the first block. An insertion point for prepending operations.
     sig { returns(OperationLink) }
-    def beginning
+    def front
       @sentinel
     end
 
+    ## The link after the last block. An insertion point for appending operations.
     sig { returns(OperationLink) }
-    def end
+    def back
       @sentinel.prev_link
     end
 
+    ## The first operation in this block. Nil if this block is empty.
     sig { returns(T.nilable(Operation)) }
     def first_operation
       @sentinel.next_operation
     end
 
+    ## The last operation in this block. Nil if this block is empty.
     sig { returns(T.nilable(Operation)) }
     def last_operation
       @sentinel.prev_operation
     end
 
+    ## Does this block contain any operations?
+    sig { returns(T::Boolean) }
+    def empty?
+      @sentinel.next_link == @sentinel
+    end
+
+    ## An enumerable that walks the operations in this block.
     sig { returns(OperationsInBlock) }
     def operations
       OperationsInBlock.new(self)
+    end
+
+    sig { params(operation: Operation).returns(Block) }
+    def prepend_operation!(operation)
+      operation.insert_into_block!(front)
+      self
+    end
+
+    sig { params(operation: Operation).returns(Block) }
+    def append_operation!(operation)
+      operation.insert_into_block!(back)
+      self
+    end
+
+    sig { params(operation: Operation).returns(Block) }
+    def remove_operation!(operation)
+      raise "operation is not a child of this block" if self != operation.block
+      operation.remove_from_block!
+      self
+    end
+
+    sig { returns(T.nilable(Operation)) }
+    def terminator
+      # TODO!
+      nil
     end
   end
 

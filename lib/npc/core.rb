@@ -7,3 +7,8 @@ module NPC
     extend T::Sig
   end
 end
+
+require_relative("core/const")
+require_relative("core/i32_const")
+require_relative("core/i32")
+require_relative("core/module")

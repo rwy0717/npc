@@ -10,6 +10,16 @@ module NPC
 
     Elem = type_member(fixed: Use)
 
+    class << self
+      extend T::Sig
+
+      # The uses of a value
+      sig { params(value: Value).returns(Uses) }
+      def of(value)
+        Uses.new(value.first_use)
+      end
+    end
+
     sig { params(use: T.nilable(Use)).void }
     def initialize(use = nil)
       @use = T.let(use, T.nilable(Use))
@@ -36,3 +46,4 @@ module NPC
     end
   end
 end
+

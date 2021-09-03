@@ -18,7 +18,9 @@ group :development, :test do
   gem "rubocop-minitest", require: false
   gem "rubocop-rake", require: false
   gem "rubocop", require: false
-  gem "sorbet", group: :development
+  gem "sorbet", require: false
+  gem "yard", require: false
+  gem "yard-sorbet", require: false
 end
 
 gemspec
