@@ -110,6 +110,18 @@ module NPC
       end
     end
 
+    sig do
+      params(
+        other: T.nilable(Value),
+        proc: T.proc.params(arg0: Use).returns(T::Boolean),
+      ).void
+    end
+    def replace_uses_if!(other, &proc)
+      uses.each do |use|
+        use.value = other if proc.call(use)
+      end
+    end
+
     # Dump this use to a string.
     sig { returns(String) }
     def to_s
