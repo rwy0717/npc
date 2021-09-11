@@ -35,4 +35,3 @@ module Flow
     attr_accessor :spec
   end
 end
-

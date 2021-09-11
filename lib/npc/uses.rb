@@ -46,4 +46,3 @@ module NPC
     end
   end
 end
-

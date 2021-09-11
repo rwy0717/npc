@@ -57,7 +57,7 @@ module NPC
     # Remove this usage from it's value.
     sig { void }
     def remove_from_value!
-      raise "use not attached to value" unless @value != nil
+      raise "use not attached to value" unless !@value.nil?
 
       if @value.first_use == self
         @value.first_use = @next_use
@@ -85,4 +85,3 @@ module NPC
     end
   end
 end
-

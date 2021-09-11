@@ -29,7 +29,7 @@ module NPC
     sig do
       override.params(
           proc: T.proc.params(arg0: Operation).void
-      ).returns(Users)
+        ).returns(Users)
     end
     def each(&proc)
       Uses.new(@use).each do |use|

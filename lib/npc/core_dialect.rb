@@ -5,4 +5,3 @@ module NPC
   class CoreDialect
   end
 end
-

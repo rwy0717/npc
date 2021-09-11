@@ -7,7 +7,7 @@ module NPC
       extend T::Sig
 
       sig { void }
-      def initialize()
+      def initialize
         super()
 
         @lhs = T.let(Operand.new(self, 0), Operand)

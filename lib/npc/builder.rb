@@ -51,10 +51,49 @@ module NPC
     # Insert the op at the current insertion point and move the insertion point forwards.
     # Returns the inserted op.
     sig { params(operation: Operation).returns(Operation) }
-    def insert(operation)
+    def insert!(operation)
       operation.insert_into_block!(@point)
       @point = operation
       operation
+    end
+
+    # Try to fold away the operation before insertion.
+    sig { params(operation: Operation).returns(T::Array[Value]) }
+    def insert_or_fold!(operation)
+      results = fold(operation)
+      if results
+        # TODO: Destroy the operation?
+        results
+      else
+        insert!(operation)
+        operation.results
+      end
+    end
+
+    sig { params(operation: Operation).returns(T.nilable(T::Array[Value])) }
+    def fold(operation)
+      return nil if operation.is_a?(Constant)
+      return nil unless operation.is_a?(Foldable)
+
+      constant_operands = operation.operands.map do |operand|
+        Constant.constant_value(T.must(operand.value))
+      end
+
+      results = operation.fold(constant_operands)
+      return nil unless results
+
+      values = results.map do |result|
+        case result
+        when Value
+          result
+        when AbstractConstant
+          constant = result.materialize
+          insert!(constant)
+          T.must(constant.results[0])
+        end
+      end
+
+      values
     end
   end
 end

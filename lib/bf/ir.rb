@@ -1,12 +1,38 @@
 # typed: strict
 # frozen_string_literal: true
+
 module BF
   module IR
     # Base IR
 
     class Operation < NPC::Operation; end
 
-    class Inc < Operation; end
+    class Program < NPC::NullaryOperation
+      extend T::Sig
+      extend T::Helpers
+      include NPC::NoResult
+
+      sig { void }
+      def initialize
+        super()
+        @body = T.let(NPC::Region.new, NPC::Region)
+      end
+
+      sig { returns(T::Array[NPC::Result]) }
+      attr_reader :results
+
+      sig { returns(NPC::Region) }
+      attr_reader :body
+    end
+
+    class Inc < NPC::NullaryOperation
+      include NPC::NoResult
+
+      sig { void }
+      def initialize
+        super()
+      end
+    end
 
     class Dec < Operation; end
 
@@ -19,6 +45,8 @@ module BF
     class LoopR < Operation; end
 
     class Print < Operation; end
+
+    # Extended IR
 
     class Add < Operation; end
 
