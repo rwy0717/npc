@@ -1,4 +1,4 @@
-# typed: strict
+# typed: true
 # frozen_string_literal: true
 
 require("npc/base")
@@ -82,29 +82,163 @@ module NPC
     attr_accessor :next_link
   end
 
+  AttributeHash = T.type_alias { T::Hash[Symbol, T.untyped] }
+
+  class OperandInfo < T::Struct
+    const :name, Symbol
+    const :index, Integer
+    const :type, Class
+  end
+
+  class ResultInfo < T::Struct
+    const :name, Symbol
+    const :index, Integer
+    const :type, Class
+  end
+
+  class Signature < T::Struct
+    const :operands, T::Hash[Symbol, OperandInfo]
+    const :operand_tail, T::Array[OperandInfo]
+  end
+
+  class SignatureBuilder
+    extend T::Sig
+    extend T::Helpers
+
+    sig { void }
+    def initialize()
+      @operand_list = T.let([], T::Array[OperandInfo])
+      @result_list  = T.let([], T::Array[ResultInfo])
+    end
+
+    sig { params(name: Symbol).returns(T.self_type) }
+    def operand(name)
+      @operand_list << OperandInfo.new(
+        type: Operand,
+        name: name,
+        index: @operand_list.length,
+      )
+      self
+    end
+
+    sig { params(name: Symbol).returns(T.self_type) }
+    def operand_array(name)
+      @operand_list << OperandInfo.new(
+        type: OperandArray,
+        name: name,
+        index: @operand_list.length,
+      )
+      self
+    end
+
+    sig { params(name: Symbol).returns(T.self_type) }
+    def result(name)
+      @result_list << ResultInfo.new(
+        type: Result,
+        name: name,
+        index: @result_list.length,
+      )
+      self
+    end
+
+    sig { returns(T::Array[OperandInfo]) }
+    attr_reader :operand_list
+
+    sig { returns(T::Array[ResultInfo]) }
+    attr_reader :result_list
+  end
+
+  module Define
+    extend T::Sig
+    extend T::Helpers
+
+    module ClassMethods
+      extend T::Sig
+      extend T::Helpers
+      include Kernel
+
+      sig do
+        params(
+          proc: T.proc.bind(SignatureBuilder).void
+        ).void
+      end
+      def define(&proc)
+        builder = SignatureBuilder.new
+        builder.instance_eval(&proc)
+        p builder
+        builder.operand_list.each do |operand_info|
+          define_operand_accessors(operand_info)
+        end
+      end
+
+      sig { params(operand_info: OperandInfo).void }
+      def define_operand_accessors(operand_info)
+        name = operand_info.name
+
+        define_method "#{name}" do
+          operands[index].value
+        end
+
+        define_method "#{name}=" do |value|
+          raise "must be value" unless value.is_a?(Value)
+          operands[index].value = value
+        end
+
+        define_method "#{name}_operand" do
+          operands[index]
+        end
+
+        define_method "#{name}_operand_info" do
+          self.class.operand_table[name]
+        end
+      end
+    end
+
+    mixes_in_class_methods(ClassMethods)
+  end
+
   ## The base class for all operations in NPC.
   class Operation
     extend T::Sig
     extend T::Helpers
-
+    include Define
     include OperationLink
+
+    module ClassMethods
+      extend T::Sig
+      extend T::Helpers
+
+      def operand_table
+        @operand_table = T.let(@operand_table, T.nilable(T::Hash[Symbol, OperandInfo]))
+        @operand_table ||= {}
+      end
+
+      sig do
+        params(
+          name: Symbol
+        ).void
+      end
+      def operand(name)
+        index = operand_table.length
+        info = OperandInfo.new(index: index)
+        operand_table[name] = info
+      end
+    end
 
     sig do
       params(
-        location: Location,
-        operands: T::Array[Operand],
+        operands: T::Array[AnyOperand],
         results: T::Array[Result],
       ).void
     end
     def initialize(
-      location:,
       operands:,
       results:
     )
       super()
-      @location  = T.let(location, Location)
-      @operands  = T.let(operands, T::Array[Operand])
-      @results   = T.let(results,  T::Array[Result])
+      # @location  = T.let(location, Location)
+      @operands  = T.let(operands, T::Array[AnyOperand])
+      @results   = T.let(results,  T::Array[AnyResult])
       @prev_link = T.let(nil, T.nilable(OperationLink))
       @next_link = T.let(nil, T.nilable(OperationLink))
     end
@@ -211,10 +345,12 @@ module NPC
 
     ### Attributes
 
-    sig { returns(Location) }
-    attr_reader :location
+    # sig { returns(Location) }
+    # attr_reader :location
 
-    sig { returns(T::Array[Operand]) }
+    ### Operands
+
+    sig { returns(T::Array[AnyOperand]) }
     attr_reader :operands
 
     sig { params(value: T.nilable(Value)).returns(Operand) }
@@ -224,6 +360,8 @@ module NPC
       operand
     end
 
+    ### Results
+
     sig { returns(T::Array[Result]) }
     attr_reader :results
 
@@ -232,6 +370,25 @@ module NPC
       result = Result.new(self, results.length)
       results << result
       result
+    end
+
+    # Deep copy of the operand array.
+    sig { returns(T::Array[AnyOperand]) }
+    def copy_operands
+      operands.map(&:copy)
+    end
+
+    # Deep copy of the results. Will have no uses.
+    sig { returns(T::Array[Result]) }
+    def copy_results
+      results.map(&:copy)
+    end
+
+    sig { returns(T.self_type) }
+    def copy
+      copy = Operand.new()
+      self.cl
+      self.
     end
   end
 end

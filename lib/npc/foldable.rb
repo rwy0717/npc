@@ -18,4 +18,3 @@ module NPC
     def fold(operands); end
   end
 end
-

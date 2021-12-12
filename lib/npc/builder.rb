@@ -76,7 +76,7 @@ module NPC
       return nil unless operation.is_a?(Foldable)
 
       constant_operands = operation.operands.map do |operand|
-        Constant.constant_value(T.must(operand.value))
+        Constant.constant_value(operand.value)
       end
 
       results = operation.fold(constant_operands)

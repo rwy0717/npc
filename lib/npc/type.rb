@@ -2,5 +2,6 @@
 # frozen_string_literal: true
 
 module NPC
-  class Type; end
+  module Type
+  end
 end

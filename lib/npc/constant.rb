@@ -32,11 +32,11 @@ module NPC
       end
 
       # Try to coerce a value into a compile time constant.
-      # Returns nil if the 
+      # Returns nil if the
       sig { params(value: Value).returns(T.nilable(T.untyped)) }
       def constant_value(value)
         return nil unless value.is_a?(Result)
-        
+
         operation = value.defining_operation
         return nil unless operation.is_a?(Constant)
 
@@ -89,7 +89,7 @@ module NPC
     extend T::Sig
     extend T::Helpers
     include AbstractConstant
-    
+
     const :value, Float
 
     sig { override.returns(Operation) }
@@ -98,4 +98,3 @@ module NPC
     end
   end
 end
-

@@ -3,6 +3,12 @@
 
 module NPC
   module Core
-    I32 = T.let(Type.new, Type)
+    class I32Type
+      extend T::Sig
+      extend T::Helpers
+      include Type
+    end
+
+    I32 = T.let(I32Type.new, I32Type)
   end
 end

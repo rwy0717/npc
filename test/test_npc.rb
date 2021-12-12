@@ -6,6 +6,35 @@ require "npc/test"
 class TestNPC < Minitest::Test
   extend T::Sig
 
+  class Const < NPC::Operation
+    define do
+    end
+
+    sig { params(value: Integer).void }
+    def initialize(value)
+      super([],  [])
+      @value = T.let(value, Integer)
+    end
+
+    sig { returns(Integer) }
+    attr_accessor :value
+  end
+
+  class Add < NPC::Operation
+    define do
+      operand(:lhs)
+      operand(:rhs)
+    end
+  end
+
+   sig { void }
+   def test_accessors
+     k = Const.new(123)
+     add = Add.new
+     add.lhs = k.result
+     add.rhs = k.result
+   end
+
   sig { void }
   def test_main
     binding.pry
@@ -15,22 +44,6 @@ class TestNPC < Minitest::Test
     assert_equal(region.front, region.back)
     assert_nil(region.first_block)
     assert_nil(region.last_block)
-    assert_equal([], region.arguments)
-
-    block = NPC::Block.new(argument_types: [])
-    region.append_block!(block)
-
-    assert_equal(region, block.region)
-    assert_equal(region.front, block.prev_link)
-    assert_equal(region.front, block.next_link)
-    assert_equal(region.back, block)
-
-    assert_equal(block, region.first_block)
-    assert_equal(block, region.last_block)
-    assert_equal(region.arguments, block.arguments)
-
-    block.drop!
-
     assert_empty(region)
     assert_equal(region.front, region.back)
     assert_nil(region.first_block)
@@ -56,4 +69,9 @@ class TestNPC < Minitest::Test
     assert_equal(operation, block.front.next_operation)
     assert_equal(operation, block.back)
   end
+
+  # sig { void }
+  # def test_fold
+  #   b = Builder.new
+  #   b.insert(NPC::Core::Module.new)
 end
