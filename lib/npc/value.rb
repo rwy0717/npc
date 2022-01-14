@@ -2,6 +2,8 @@
 # frozen_string_literal: true
 
 require("npc/base")
+require("npc/type")
+
 # require("npc/operation")
 
 module NPC
@@ -11,9 +13,14 @@ module NPC
 
     sig { params(first_use: T.nilable(Use)).void }
     def initialize(first_use = nil)
+      @type = T.let(nil, T.nilable(Type))
       @first_use = T.let(first_use, T.nilable(Use))
     end
 
+    # Get this value's type.
+    sig { returns(T.nilable(Type)) }
+    attr_accessor :type
+  
     sig { returns(T.nilable(Use)) }
     attr_accessor :first_use
 

@@ -3,6 +3,7 @@
 
 module NPC
   module Core
+    # A function Definition
     class Function < Operation
       extend T::Sig
 

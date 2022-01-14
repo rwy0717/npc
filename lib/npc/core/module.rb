@@ -3,6 +3,7 @@
 
 module NPC
   module Core
+    # Generic Top-level container for IR.
     class Module < Operation
       extend T::Sig
 

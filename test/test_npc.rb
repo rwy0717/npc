@@ -1,4 +1,4 @@
-# typed: strict
+# typed: false
 # frozen_string_literal: true
 
 require "npc/test"
@@ -12,7 +12,7 @@ class TestNPC < Minitest::Test
 
     sig { params(value: Integer).void }
     def initialize(value)
-      super([],  [])
+      super([], [])
       @value = T.let(value, Integer)
     end
 
@@ -27,17 +27,18 @@ class TestNPC < Minitest::Test
     end
   end
 
-   sig { void }
-   def test_accessors
-     k = Const.new(123)
-     add = Add.new
-     add.lhs = k.result
-     add.rhs = k.result
-   end
+  sig { void }
+  def test_accessors
+    k = Const.new(123)
+    add = Add.new
+    add.lhs = k.result
+    add.rhs = k.result
+
+    assert_equal(add.lhs, add.rhs)
+  end
 
   sig { void }
   def test_main
-    binding.pry
     region = NPC::Region.new
 
     assert_empty(region)
@@ -49,7 +50,7 @@ class TestNPC < Minitest::Test
     assert_nil(region.first_block)
     assert_nil(region.last_block)
 
-    assert_equal([], region.arguments)
+    assert_empty(region.arguments)
   end
 
   sig { void }

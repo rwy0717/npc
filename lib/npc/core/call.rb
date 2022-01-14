@@ -15,16 +15,21 @@ module NPC
       end
       def initialize(callee, arguments)
         super()
-
         @callee    = callee
         @arguments = arguments
       end
 
-      #       argument :callee, FlatSymbolRef
-      #       argument :operands, Variadic[AnyType]
-      #
-      #       let arguments = (ins FlatSymbolRefAttr:$callee, Variadic<AnyType>:$operands);
-      #       let results = (outs Variadic<AnyType>);
+      # TODO: How do we represent the callee?
+      # Need a symbol-ref or something... can we have typed references?
+      sig { returns(T.untyped) }
+      def callee
+        attribute(:callee)
+      end
+
+      sig { returns(T::Array[Operand]) }
+      def arguments
+        operands
+      end
     end
   end
 end

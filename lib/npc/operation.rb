@@ -1,4 +1,4 @@
-# typed: true
+# typed: false
 # frozen_string_literal: true
 
 require("npc/base")
@@ -106,7 +106,7 @@ module NPC
     extend T::Helpers
 
     sig { void }
-    def initialize()
+    def initialize
       @operand_list = T.let([], T::Array[OperandInfo])
       @result_list  = T.let([], T::Array[ResultInfo])
     end
@@ -165,7 +165,7 @@ module NPC
       def define(&proc)
         builder = SignatureBuilder.new
         builder.instance_eval(&proc)
-        p builder
+        p(builder)
         builder.operand_list.each do |operand_info|
           define_operand_accessors(operand_info)
         end
@@ -175,20 +175,20 @@ module NPC
       def define_operand_accessors(operand_info)
         name = operand_info.name
 
-        define_method "#{name}" do
+        define_method(name.to_s) do
           operands[index].value
         end
 
-        define_method "#{name}=" do |value|
+        define_method("#{name}=") do |value|
           raise "must be value" unless value.is_a?(Value)
           operands[index].value = value
         end
 
-        define_method "#{name}_operand" do
+        define_method("#{name}_operand") do
           operands[index]
         end
 
-        define_method "#{name}_operand_info" do
+        define_method("#{name}_operand_info") do
           self.class.operand_table[name]
         end
       end
@@ -227,20 +227,39 @@ module NPC
 
     sig do
       params(
-        operands: T::Array[AnyOperand],
+        operands: T::Array[Operand],
         results: T::Array[Result],
+        attributes: T::Hash[Symbol, T.untyped],
       ).void
     end
     def initialize(
-      operands:,
-      results:
+      operands = [],
+      results = [],
+      attributes = {}
     )
       super()
       # @location  = T.let(location, Location)
-      @operands  = T.let(operands, T::Array[AnyOperand])
-      @results   = T.let(results,  T::Array[AnyResult])
+      @operands   = T.let(operands, T::Array[Operands])
+      @results    = T.let(results,  T::Array[AnyResult])
+      @attributes = T.let(attributes, T::Hash[Symbol, T.untyped])
+
       @prev_link = T.let(nil, T.nilable(OperationLink))
       @next_link = T.let(nil, T.nilable(OperationLink))
+    end
+
+    ### Attributes
+
+    sig { returns(T::Hash[Symbol, T.untyped]) }
+    attr_reader :attributes
+
+    sig { params(key: Symbol).returns(T.untyped) }
+    def attribute(key)
+      attributes.fetch(key)
+    end
+  
+    sig { params(key: Symbol).returns(T::Boolean) }
+    def attribute?(key)
+      attributes.key?(key)
     end
 
     ### Operation Links
@@ -350,9 +369,19 @@ module NPC
 
     ### Operands
 
-    sig { returns(T::Array[AnyOperand]) }
+    sig { returns(T::Array[Operand]) }
     attr_reader :operands
 
+    sig { params(index: Integer).returns(Operand) }
+    def operand(index)
+      operands.fetch(index)
+    end
+
+    def operand_count
+      operands.count
+    end
+
+    # Push a new operand onto the end of the operand array.
     sig { params(value: T.nilable(Value)).returns(Operand) }
     def new_operand(value = nil)
       operand = Operand.new(self, operands.length, value)
@@ -365,6 +394,17 @@ module NPC
     sig { returns(T::Array[Result]) }
     attr_reader :results
 
+    sig { params(index: Integer).returns(Result) }
+    def result(index = 0)
+      results.fetch(index)
+    end
+  
+    sig { returns(Integer) }
+    def result_count
+      results.length
+    end
+  
+    # Push a new result onto the end of the result array.
     sig { returns(Result) }
     def new_result
       result = Result.new(self, results.length)
@@ -372,23 +412,27 @@ module NPC
       result
     end
 
-    # Deep copy of the operand array.
-    sig { returns(T::Array[AnyOperand]) }
-    def copy_operands
-      operands.map(&:copy)
+    ### Cloning and Copying
+
+    # Deep copy of the operand array into another operation.
+    sig { params(operation: Operation).returns(T::Array[Operand]) }
+    def copy_operands_into(operation)
+      operands.map { |operand| operand.copy_into(operation) }
     end
 
-    # Deep copy of the results. Will have no uses.
-    sig { returns(T::Array[Result]) }
-    def copy_results
-      results.map(&:copy)
+    # Deep copy of the results into another operation. Will have no uses.
+    sig { params(operation: Operation).returns(T::Array[Result]) }
+    def copy_results_into(operation)
+      results.map { |result| result.copy_into(operation) }
     end
 
+    # Deep copy of this operation.
     sig { returns(T.self_type) }
     def copy
-      copy = Operand.new()
-      self.cl
-      self.
+      operation = dup
+      copy_operands_into(operation)
+      copy_results_into(operation)
+      operation
     end
   end
 end

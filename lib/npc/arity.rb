@@ -82,6 +82,7 @@ module NPC
 
     sig { void }
     def initialize
+      super
       @operand = T.let(new_operand, Operand)
     end
 

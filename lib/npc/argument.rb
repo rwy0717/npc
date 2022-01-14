@@ -36,10 +36,5 @@ module NPC
     # The type of this argument.
     sig { returns(Type) }
     attr_reader :type
-
-    sig { override.returns(T.nilable(Operation)) }
-    def defining_operation
-      nil
-    end
   end
 end

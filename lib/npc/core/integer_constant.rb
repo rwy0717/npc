@@ -9,6 +9,7 @@ module NPC
 
       sig { params(value: Integer).void }
       def initialize(value)
+        super
         @value = T.let(value, Integer)
       end
 

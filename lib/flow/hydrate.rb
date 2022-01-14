@@ -17,7 +17,7 @@ module Flow
   class HydrationSpec < T::Struct
     const :source, HydrationSource
     const :params, T::Array[Symbol]
-    const :request, T.untyped
+    # const :request, T.untyped
   end
 
   # Hydrate data from a source

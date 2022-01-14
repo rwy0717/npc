@@ -170,4 +170,27 @@ module NPC
   #       elements(x)
   #     end
   #   end
+
+  # class PP
+  #   class << self
+  #     extend T::Sig
+
+  #     sig { params(x: T.untyped).returns(void) }
+  #     def print(x)
+  #       PP.new.print(x)
+  #     end
+  #   end
+
+  #   extend T::Sig
+
+  #   # Generic printing utility.
+  #   sig { params(x: T.untyped).returns(void) }
+  #   def print(x)
+  #     if x.is_a?(PP::Printable)
+  #       x.pp(self)
+  #     else
+  #       pp(x)
+  #     end
+  #   end
+  # end
 end

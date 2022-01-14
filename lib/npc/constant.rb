@@ -25,7 +25,7 @@ module NPC
       def constant?(value)
         return false unless value.is_a?(Result)
 
-        operation = value.defining_operation
+        operation = value.operation
         return false unless operation.is_a?(Constant)
 
         operation.constant_result?(value)
