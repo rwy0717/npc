@@ -67,6 +67,12 @@ module NPC
       @target.nil?
     end
 
+    # True if this operand is targeting x.
+    sig { params(x: Value).returns(T::Boolean) }
+    def is?(x)
+      @target.equal?(x)
+    end
+
     # Set the target value of this operand. Target must not be already set.
     sig { params(target: Value).void }
     def set!(target)

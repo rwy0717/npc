@@ -20,7 +20,7 @@ module NPC
     # Get this value's type.
     sig { returns(T.nilable(Type)) }
     attr_accessor :type
-  
+
     sig { returns(T.nilable(Operand)) }
     attr_accessor :first_use
 

@@ -1,4 +1,5 @@
 # # typed: strict
+# frozen_string_literal: true
 # # frozen_string_literal: true
 
 # module Flow
@@ -30,7 +31,7 @@
 
 #   class GQLPath
 #     extend T::Sig
-    
+
 #     sig in
 #     source: Source
 #     path: GQLQuery

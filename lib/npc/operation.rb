@@ -265,7 +265,7 @@ module NPC
     def attribute(key)
       attributes.fetch(key)
     end
-  
+
     sig { params(key: Symbol).returns(T::Boolean) }
     def attribute?(key)
       attributes.key?(key)
@@ -386,7 +386,7 @@ module NPC
     end
 
     # Drop this operator from the block, and replace it with another.
-    # The new operation will be inserted where the 
+    # The new operation will be inserted where the
     sig { params(other: Operation).void }
     def replace!(other)
       raise "op must be in a block to be replaced" unless in_block?
@@ -416,11 +416,6 @@ module NPC
       operands.count
     end
 
-    sig { returns(T::Array[Block]) }
-    def successors
-      T.cast(block_operands.map(&value), T::Array[Block])
-    end
-
     # Push a new operand onto the end of the operand array.
     sig { params(target: T.nilable(Value)).returns(Operand) }
     def new_operand(target = nil)
@@ -436,7 +431,7 @@ module NPC
       block_operands << block_operand
       block_operand
     end
-  
+
     ### Results
 
     sig { returns(T::Array[Result]) }
@@ -446,12 +441,12 @@ module NPC
     def result(index = 0)
       results.fetch(index)
     end
-  
+
     sig { returns(Integer) }
     def result_count
       results.length
     end
-  
+
     # Push a new result onto the end of the result array.
     sig { returns(Result) }
     def new_result

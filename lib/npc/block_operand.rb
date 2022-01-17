@@ -46,7 +46,7 @@ module NPC
     def get
       @target
     end
-  
+
     # This block-operand's target block. Target must be set.
     sig { returns(Block) }
     def get!
@@ -63,6 +63,11 @@ module NPC
     sig { returns(T::Boolean) }
     def unset?
       @target.nil?
+    end
+
+    sig { params(x: Block).returns(T::Boolean) }
+    def is?(x)
+      @target.equal?(x)
     end
 
     # Set the target block of this block-operand. Target must not be already set.
@@ -91,7 +96,7 @@ module NPC
       @prev_use = nil
       @next_use = nil
     end
-  
+
     # Reset this block-operand, to target a new block.
     sig { params(target: T.nilable(Block)).void }
     def target=(target)

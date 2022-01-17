@@ -3,7 +3,6 @@
 Gem::Specification.new do |spec|
   spec.name        = "npc"
   spec.version     = "0.0.1"
-  spec.date        = "2020-10-08"
   spec.summary     = "Nanopass Compiler"
   spec.description = "A simple compiler framework"
   spec.authors     = ["Robert Young"]

@@ -7,7 +7,7 @@ module NPC
   module Core
     class BoolConst < Operation
       extend T::Sig
-  
+
       sig { params(value: T::Boolean).void }
       def initialize(value)
         super

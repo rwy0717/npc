@@ -373,8 +373,8 @@ module NPC
     ## Nil if the block is empty, or if the last operation is not a Terminator.
     sig { returns(T.nilable(Operation)) }
     def terminator
-    op = back
-    op if op.is_a?(Operation) && op.is_a?(Terminator)
+      op = back
+      op if op.is_a?(Operation) && op.is_a?(Terminator)
     end
 
     ## Does this block contain any operations?
@@ -410,7 +410,7 @@ module NPC
 
     ### Predecessor and Sucessor Blocks
 
-    # Any uss 
+    # Any uss
     sig { returns(T::Array[Block]) }
     def predecessors
       uses.map { |use| use.operation.block }.compact
