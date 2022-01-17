@@ -7,6 +7,11 @@ require("npc/operand")
 require("npc/result")
 
 module NPC
+  NO_OPERANDS       = T.let([].freeze, T::Array[Operand])
+  NO_BLOCK_OPERANDS = T.let([].freeze, T::Array[BlockOperand])
+  NO_RESULTS        = T.let([].freeze, T::Array[Result])
+  NO_REGIONS        = T.let([].freeze, T::Array[Region])
+
   module OperationLink
     extend T::Sig
     extend T::Helpers
@@ -230,21 +235,25 @@ module NPC
         operands: T::Array[Operand],
         results: T::Array[Result],
         attributes: T::Hash[Symbol, T.untyped],
+        loc: T.nilable(Location),
       ).void
     end
     def initialize(
       operands = [],
       results = [],
-      attributes = {}
+      attributes = {},
+      loc: nil
     )
       super()
-      # @location  = T.let(location, Location)
+
       @operands   = T.let(operands, T::Array[Operands])
       @results    = T.let(results,  T::Array[AnyResult])
       @attributes = T.let(attributes, T::Hash[Symbol, T.untyped])
 
       @prev_link = T.let(nil, T.nilable(OperationLink))
       @next_link = T.let(nil, T.nilable(OperationLink))
+
+      @location  = T.let(loc, Location)
     end
 
     ### Attributes
@@ -262,11 +271,35 @@ module NPC
       attributes.key?(key)
     end
 
+    ### Regions
+
+    sig { returns(T::Array[Region]) }
+    def regions
+      @regions || NO_REGIONS
+    end
+
+    ### Block Operands / Successor Regions
+
+    sig { returns(T::Array[BlockOperand]) }
+    def block_operands
+      @block_operands || NO_BLOCK_OPERANDS
+    end
+
+    sig { returns(T::Array[Block]) }
+    def successors
+      block_operands.map do |operand|
+        T.cast(operand.value, Block)
+      end
+    end
+
     ### Operation Links
 
     sig { override.returns(T.nilable(Block)) }
     attr_reader :block
 
+    # TODO: Should we rename this to parent_block?
+    # Calling it "block" is confusing if the operation has a single-block body,
+    # for example a module op.
     sig { params(block: T.nilable(Block)).returns(T.nilable(Block)) }
     attr_writer :block
 
@@ -343,19 +376,21 @@ module NPC
     # Replace the uses of this operation's results with the results of a different operation.
     sig { params(other: Operation).void }
     def replace_uses!(other)
-      # TODO: Need to check that the types line up.
-      # TODO: Need to check that these ops are in the same block.
+      unless block.equal?(other.block)
+        raise "cannot replace the uses of an op with an op from a different block"
+      end
+
       results.each do |result|
         result.replace_uses!(other.results[result.index])
       end
     end
 
     # Drop this operator from the block, and replace it with another.
-    # The new operation will be inserted where
+    # The new operation will be inserted where the 
     sig { params(other: Operation).void }
     def replace!(other)
       raise "op must be in a block to be replaced" unless in_block?
-      # TODO: Need to check that the types are compatible.
+
       cursor = prev_link!
       remove_from_block!
       other.insert_into_block!(cursor)
@@ -381,14 +416,27 @@ module NPC
       operands.count
     end
 
+    sig { returns(T::Array[Block]) }
+    def successors
+      T.cast(block_operands.map(&value), T::Array[Block])
+    end
+
     # Push a new operand onto the end of the operand array.
-    sig { params(value: T.nilable(Value)).returns(Operand) }
-    def new_operand(value = nil)
-      operand = Operand.new(self, operands.length, value)
+    sig { params(target: T.nilable(Value)).returns(Operand) }
+    def new_operand(target = nil)
+      operand = Operand.new(self, operands.length, target)
       operands << operand
       operand
     end
 
+    # Push a new block-operand onto the end of the block-operand array.
+    sig { params(target: T.nilable(Block)).returns(BlockOperand) }
+    def new_block_operand(target = nil)
+      block_operand = BlockOperand.new(self, block_operands.length, target)
+      block_operands << block_operand
+      block_operand
+    end
+  
     ### Results
 
     sig { returns(T::Array[Result]) }

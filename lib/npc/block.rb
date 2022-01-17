@@ -113,8 +113,73 @@ module NPC
     end
   end
 
+  # Iterator for the block-operands that use a given block.
+  class BlockUses
+    class << self
+      extend T::Sig
+
+      sig { params(block: Block).returns(BlockUses) }
+      def of(block)
+        BlockUses.new(block.first_use)
+      end
+    end
+
+    extend T::Sig
+    extend T::Generic
+
+    include Enumerable
+
+    Elem = type_member(fixed: BlockOperand)
+
+    sig { params(root: T.nilable(BlockOperand)).void }
+    def initialize(root)
+      @root = T.let(root, T.nilable(BlockOperand))
+    end
+
+    sig { override.params(proc: T.proc.params(arg0: BlockOperand).returns(BasicObject)).returns(BasicObject) }
+    def each(&proc)
+      use = T.let(@root, T.nilable(BlockOperand))
+      while use
+        next_use = use.next_use
+        proc.call(use)
+        use = next_use
+      end
+    end
+  end
+
+  # Iterator for the operations that use a given block as a block-operand.
+  class BlockUsers
+    class << self
+      extend T::Sig
+
+      sig { params(block: Block).returns(BlockUsers) }
+      def of(block)
+        BlockUsers.new(block.first_use)
+      end
+    end
+
+    extend T::Sig
+    extend T::Generic
+
+    include Enumerable
+
+    Elem = type_member(fixed: Operand)
+
+    sig { params(root: T.nilable(BlockOperand)).void }
+    def initialize(root)
+      @uses = T.let(BlockUses.new(root), BlockUses)
+    end
+
+    sig { override.params(proc: T.proc.params(arg0: Operation).returns(BasicObject)).returns(BasicObject) }
+    def each(&proc)
+      @uses.each do |use|
+        proc.call(use.operation)
+      end
+    end
+  end
+
   ## A basic block in the CFG. Blocks belongs to a region, and contain an ordered list of operations.
-  class Block < Value
+  class Block
     extend T::Sig
     include BlockLink
 
@@ -142,17 +207,51 @@ module NPC
       ).void
     end
     def initialize(argument_types: [])
-      super()
-
       @region     = T.let(nil, T.nilable(Region))
       @prev_link  = T.let(nil, T.nilable(BlockLink))
       @next_link  = T.let(nil, T.nilable(BlockLink))
       @arguments  = T.let([], T::Array[Argument])
       @sentinel   = T.let(OperationSentinel.new(self), OperationSentinel)
-
+      @first_use  = T.let(nil, T.nilable(BlockOperand))
       argument_types.each do |type|
         add_argument(type)
       end
+    end
+
+    ### Uses.
+
+    sig { returns(T.nilable(BlockOperand)) }
+    attr_accessor :first_use
+
+    sig { returns(T::Boolean) }
+    def unused?
+      @first_use.nil?
+    end
+
+    sig { returns(T::Boolean) }
+    def used?
+      @first_use != nil
+    end
+
+    sig { returns(T::Boolean) }
+    def used_once?
+      if @first_use
+        @first_use.next_use.nil?
+      else
+        false
+      end
+    end
+
+    # An enumerable of the BlockOperands that use this Block.
+    sig { returns(BlockUses) }
+    def uses
+      BlockUses.new(@first_use)
+    end
+
+    # An Enumerable of the Operations that use this Block as a BlockOperand.
+    sig { returns(BlockUsers) }
+    def users
+      BlockUsers.new(@first_use)
     end
 
     ### Accessing the region that this block is a member of.
@@ -250,6 +349,14 @@ module NPC
       @sentinel.prev_link
     end
 
+    ## The link before the block's terminating operation. If the last operatopm
+    ## is not a terminator, just return the last operation.
+    sig { returns(OperationLink) }
+    def before_terminator
+      op = back
+      T.must(op.is_a?(Terminator) ? op.prev_link : op)
+    end
+
     ## The first operation in this block. Nil if this block is empty.
     sig { returns(T.nilable(Operation)) }
     def first_operation
@@ -260,6 +367,14 @@ module NPC
     sig { returns(T.nilable(Operation)) }
     def last_operation
       @sentinel.prev_operation
+    end
+
+    ## The operation that terminates this block
+    ## Nil if the block is empty, or if the last operation is not a Terminator.
+    sig { returns(T.nilable(Operation)) }
+    def terminator
+    op = back
+    op if op.is_a?(Operation) && op.is_a?(Terminator)
     end
 
     ## Does this block contain any operations?
@@ -293,15 +408,18 @@ module NPC
       self
     end
 
-    sig { returns(T.nilable(Operation)) }
-    def terminator
-      # TODO!
-      nil
-    end
-  end
+    ### Predecessor and Sucessor Blocks
 
-  class Blocks
-    extend T::Sig
-    extend T::Helpers
+    # Any uss 
+    sig { returns(T::Array[Block]) }
+    def predecessors
+      uses.map { |use| use.operation.block }.compact
+    end
+
+    # If this block has a terminator operation, then any block-operands for that terminator are considered successors.
+    sig { returns(T::Array[Block]) }
+    def successors
+      terminator&.successors || []
+    end
   end
 end

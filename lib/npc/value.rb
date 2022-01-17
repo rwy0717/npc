@@ -11,17 +11,17 @@ module NPC
   class Value
     extend T::Sig
 
-    sig { params(first_use: T.nilable(Use)).void }
-    def initialize(first_use = nil)
+    sig { params(type: T.nilable(Type), first_use: T.nilable(Operand)).void }
+    def initialize(type, first_use = nil)
       @type = T.let(nil, T.nilable(Type))
-      @first_use = T.let(first_use, T.nilable(Use))
+      @first_use = T.let(first_use, T.nilable(Operand))
     end
 
     # Get this value's type.
     sig { returns(T.nilable(Type)) }
     attr_accessor :type
   
-    sig { returns(T.nilable(Use)) }
+    sig { returns(T.nilable(Operand)) }
     attr_accessor :first_use
 
     # If this is the result of an operation, get that operation.
@@ -51,21 +51,20 @@ module NPC
     # Does this have any uses?
     sig { returns(T::Boolean) }
     def used?
-      first_use != nil
+      @first_use != nil
     end
 
     # Does this have exactly one use?
     sig { returns(T::Boolean) }
     def used_once?
-      use = first_use
-      if use
-        use.next_use.nil?
+      if @first_use
+        @first_use.next_use.nil?
       else
         false
       end
     end
 
-    # Are any users
+    # Are any users located in a different block than this?
     sig { returns(T::Boolean) }
     def used_outside_block?
       users.any? do |user|
@@ -85,7 +84,7 @@ module NPC
     end
 
     # All uses as an array.
-    sig { returns(T::Array[Use]) }
+    sig { returns(T::Array[Operand]) }
     def uses_array
       uses.to_a
     end
@@ -93,14 +92,19 @@ module NPC
     # Drop all uses. All uses of this value will be cleared.
     sig { void }
     def drop_uses!
-      uses.each(&:remove_from_value!)
+      uses.each(&:unset!)
     end
 
     # Replace all uses of this value with a different value.
     sig { params(other: T.nilable(Value)).void }
     def replace_uses!(other)
+      # TODO: Is it OK for other to be nilable?
+      if other && (type != other.type)
+        raise "cannot replaces the uses of a value with a value of a different type."
+      end
+
       uses.each do |use|
-        use.value = other
+        use.target = other
       end
     end
 
@@ -108,24 +112,24 @@ module NPC
     sig do
       params(
         other: T.nilable(Value),
-        exceptions: T::Array[Use]
+        exceptions: T::Array[Operand]
       ).void
     end
     def replace_uses_except!(other, exceptions)
       uses.each do |use|
-        use.value = other unless exceptions.include?(use)
+        use.target = other unless exceptions.include?(use)
       end
     end
 
     sig do
       params(
         other: T.nilable(Value),
-        proc: T.proc.params(arg0: Use).returns(T::Boolean),
+        proc: T.proc.params(arg0: Operand).returns(T::Boolean),
       ).void
     end
     def replace_uses_if!(other, &proc)
       uses.each do |use|
-        use.value = other if proc.call(use)
+        use.target = other if proc.call(use)
       end
     end
 

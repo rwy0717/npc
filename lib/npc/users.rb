@@ -6,12 +6,6 @@
 module NPC
   # An adapter for iterating the users of a value.
   class Users
-    extend T::Sig
-    extend T::Generic
-    include Enumerable
-
-    Elem = type_member(fixed: Operation)
-
     class << self
       extend T::Sig
 
@@ -21,9 +15,15 @@ module NPC
       end
     end
 
-    sig { params(use: T.nilable(Use)).void }
+    extend T::Sig
+    extend T::Generic
+    include Enumerable
+
+    Elem = type_member(fixed: Operation)
+
+    sig { params(use: T.nilable(Operand)).void }
     def initialize(use)
-      @use = T.let(use, T.nilable(Use))
+      @use = T.let(use, T.nilable(Operand))
     end
 
     sig do
@@ -33,10 +33,7 @@ module NPC
     end
     def each(&proc)
       Uses.new(@use).each do |use|
-        case use
-        when Operand
-          proc.call(use.operation)
-        end
+        proc.call(use.operation)
       end
       self
     end

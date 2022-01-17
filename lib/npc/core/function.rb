@@ -9,19 +9,19 @@ module NPC
 
       sig do
         params(
-          location: Location,
           name: String,
-          region: Region
+          region: Region,
+          loc: T.nilable(Location),
         ).void
       end
-      def initialize(location, name, region = Region.new)
+      def initialize(name, region = Region.new, loc: nil)
         super(
-          location: location,
+          location: loc,
           operands: [],
           results:  [],
         )
-        @name   = T.let(name, String)
-        @region = T.let(region, Region)
+        @name = T.let(name, String)
+        @body_region = T.let(region, Region)
       end
 
       sig { override.returns(T::Array[Operand]) }
@@ -32,6 +32,29 @@ module NPC
       sig { override.returns(T::Array[Result]) }
       def results
         [Result.new(self, 0)]
+      end
+
+      ## Accessing the body of this function.
+
+      sig { returns(Region) }
+      attr_reader :body_region
+
+      # The block that represents this function's body.
+      sig { returns(Block) }
+      def body
+        T.must(body_region.first_block)
+      end
+
+      # The front of this module's body block.
+      sig { returns(OperationLink) }
+      def front
+        body.front
+      end
+
+      # The back of this module's body block
+      sig { returns(OperationLink) }
+      def back
+        body.back
       end
     end
   end
