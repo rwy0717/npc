@@ -12,28 +12,38 @@ module NPC
 
     sig do
       params(
-        block: Block,
+        owning_block: Block,
         index: Integer,
         type: Type,
+        first_use: T.nilable(Operand),
       ).void
     end
-    def initialize(block, index, type)
-      super()
-      @block = T.let(block, Block)
+    def initialize(owning_block, index, type, first_use = nil)
+      super(type, first_use)
+      @owning_block = T.let(owning_block, Block)
       @index = T.let(index, Integer)
-      @type  = T.let(type, Type)
+      @type = T.let(type, Type)
     end
 
-    # The block this is an argument to.
-    sig { returns(Block) }
-    attr_reader :block
-
-    # The argument index.
     sig { returns(Integer) }
     attr_reader :index
 
-    # The type of this argument.
-    sig { returns(Type) }
-    attr_reader :type
+    sig { returns(Block) }
+    attr_reader :owning_block
+
+    sig { override.returns(T.nilable(Operation)) }
+    def defining_operation
+      nil
+    end
+
+    sig { override.returns(T.nilable(Block)) }
+    def defining_block
+      @owning_block
+    end
+
+    sig { override.returns(T.nilable(Region)) }
+    def defining_region
+      @owning_block.parent_region
+    end
   end
 end

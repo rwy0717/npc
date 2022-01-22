@@ -4,6 +4,7 @@
 require("npc/argument")
 require("npc/base")
 require("npc/operation")
+require("npc/block_operand")
 
 module NPC
   module BlockLink
@@ -15,7 +16,7 @@ module NPC
     abstract!
 
     sig { abstract.returns(T.nilable(Region)) }
-    def region; end
+    def parent_region; end
 
     sig { abstract.returns(T.nilable(BlockLink)) }
     def prev_link; end
@@ -30,8 +31,28 @@ module NPC
     def next_link=(x); end
 
     sig { returns(Region) }
-    def region!
-      T.must(region)
+    def parent_region!
+      T.must(parent_region)
+    end
+
+    sig { returns(T.nilable(Operation)) }
+    def parent_operation
+      parent_region&.parent_operation
+    end
+
+    sig { returns(Operation) }
+    def parent_operation!
+      parent_region!.parent_operation!
+    end
+
+    sig { returns(T.nilable(Block)) }
+    def parent_block
+      parent_operation&.parent_block
+    end
+
+    sig { returns(Block) }
+    def parent_block!
+      parent_operation!.parent_block!
     end
 
     sig { returns(BlockLink) }
@@ -71,15 +92,15 @@ module NPC
     extend T::Sig
     include BlockLink
 
-    sig { params(region: Region).void }
-    def initialize(region)
-      @region = T.let(region, Region)
+    sig { params(parent_region: Region).void }
+    def initialize(parent_region)
+      @parent_region = T.let(parent_region, Region)
       @prev_link = T.let(self, T.nilable(BlockLink))
       @next_link = T.let(self, T.nilable(BlockLink))
     end
 
     sig { override.returns(T.nilable(Region)) }
-    attr_reader :region
+    attr_reader :parent_region
 
     sig { override.returns(T.nilable(BlockLink)) }
     attr_accessor :prev_link
@@ -173,7 +194,7 @@ module NPC
     sig { override.params(proc: T.proc.params(arg0: Operation).returns(BasicObject)).returns(BasicObject) }
     def each(&proc)
       @uses.each do |use|
-        proc.call(use.operation)
+        proc.call(use.owning_operation)
       end
     end
   end
@@ -189,13 +210,13 @@ module NPC
       # Construct a new block with arguments.
       sig { params(arg_tys: T::Array[Type]).returns(Block) }
       def with_args(arg_tys)
-        Block.new(argument_types: arg_tys)
+        Block.new(arg_tys)
       end
 
       # Construct a new block in a region.
       sig { params(region: Region, arg_tys: T::Array[Type]).returns(Block) }
       def in_region(region, arg_tys = [])
-        block = Block.new(argument_types: arg_tys)
+        block = Block.new(arg_tys)
         block.insert_into_region!(region.back)
         block
       end
@@ -206,12 +227,12 @@ module NPC
         argument_types: T::Array[Type],
       ).void
     end
-    def initialize(argument_types: [])
-      @region     = T.let(nil, T.nilable(Region))
-      @prev_link  = T.let(nil, T.nilable(BlockLink))
-      @next_link  = T.let(nil, T.nilable(BlockLink))
-      @arguments  = T.let([], T::Array[Argument])
-      @sentinel   = T.let(OperationSentinel.new(self), OperationSentinel)
+    def initialize(argument_types = [])
+      @parent_region = T.let(nil, T.nilable(Region))
+      @prev_link = T.let(nil, T.nilable(BlockLink))
+      @next_link = T.let(nil, T.nilable(BlockLink))
+      @arguments = T.let([], T::Array[Argument])
+      @sentinel = T.let(OperationSentinel.new(self), OperationSentinel)
       @first_use  = T.let(nil, T.nilable(BlockOperand))
       argument_types.each do |type|
         add_argument(type)
@@ -258,17 +279,17 @@ module NPC
 
     ## Get the region that this block is a member of. Nil if this block is disconnected.
     sig { override.returns(T.nilable(Region)) }
-    attr_reader :region
+    attr_reader :parent_region
 
     sig { returns(T::Boolean) }
     def in_region?
-      @region != nil
+      @parent_region != nil
     end
 
     ## Get the region that this block is a member of. Throws if this block is disconnected.
     sig { returns(Region) }
     def region!
-      T.must(@region)
+      T.must(@parent_region)
     end
 
     ## Get the previous block in the region's linked list of blocks.
@@ -283,9 +304,9 @@ module NPC
     sig { params(cursor: BlockLink).void }
     def insert_into_region!(cursor)
       raise "block already in region" if
-        @region || @prev_link || @next_link
+        @parent_region || @prev_link || @next_link
 
-      @region = T.must(cursor.region)
+      @parent_region = T.must(cursor.parent_region)
       @prev_link = cursor
       @next_link = cursor.next_link!
 
@@ -297,12 +318,12 @@ module NPC
     sig { void }
     def remove_from_region!
       raise "block not in region" unless
-        @region && @prev_link && @next_link
+        @parent_region && @prev_link && @next_link
 
       @prev_link.next_link = @next_link if @prev_link
       @next_link.prev_link = @prev_link if @next_link
 
-      @region    = nil
+      @parent_region = nil
       @prev_link = nil
       @next_link = nil
     end
@@ -347,6 +368,11 @@ module NPC
     sig { returns(OperationLink) }
     def back
       @sentinel.prev_link
+    end
+
+    sig { returns(OperationLink) }
+    def before_back
+      back.prev_link!
     end
 
     ## The link before the block's terminating operation. If the last operatopm
@@ -403,19 +429,20 @@ module NPC
 
     sig { params(operation: Operation).returns(Block) }
     def remove_operation!(operation)
-      raise "operation is not a child of this block" if self != operation.block
+      raise "operation is not a child of this block" if self != operation.parent_block
       operation.remove_from_block!
       self
     end
 
     ### Predecessor and Sucessor Blocks
 
-    # Any uss
+    # Any uses of this
     sig { returns(T::Array[Block]) }
     def predecessors
-      uses.map { |use| use.operation.block }.compact
+      uses.map { |use| use.owning_operation.parent_block }.compact.uniq
     end
 
+    # Get the successor-blocks (blocks that come after this, in execution order).
     # If this block has a terminator operation, then any block-operands for that terminator are considered successors.
     sig { returns(T::Array[Block]) }
     def successors

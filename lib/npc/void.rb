@@ -2,9 +2,10 @@
 # frozen_string_literal: true
 
 module NPC
-  class VoidType
+  class VoidType < Type
     extend T::Sig
     extend T::Helpers
-    include Type
   end
+
+  Void = T.let(VoidType.new, VoidType)
 end

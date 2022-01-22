@@ -48,6 +48,17 @@ module BF
 
     # Extended IR
 
+    class While < NPC::Operation
+      extend T::Sig
+
+      include NPC::OneRegion
+
+      sig { void }
+      def initialize
+        super(regions: 1)
+      end
+    end
+
     class Add < Operation; end
 
     class Sub < Operation; end

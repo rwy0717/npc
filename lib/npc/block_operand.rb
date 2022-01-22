@@ -2,32 +2,30 @@
 # frozen_string_literal: true
 
 module NPC
-  ## A special operand type that refers to a block.
+  # A special operand type that refers to a block.
   class BlockOperand
     extend T::Sig
     extend T::Helpers
 
     sig do
       params(
-        operation: Operation,
+        owning_operation: Operation,
         index: Integer,
         target: T.nilable(Block),
       ).void
     end
-    def initialize(operation, index, target = nil)
-      @operation = T.let(operation, Operation)
-      @index     = T.let(index, Integer)
-
-      @target    = T.let(nil, T.nilable(Block))
+    def initialize(owning_operation, index, target = nil)
+      @owning_operation = T.let(owning_operation, Operation)
+      @index = T.let(index, Integer)
+      @target = T.let(nil, T.nilable(Block))
       @prev_use  = T.let(nil, T.nilable(BlockOperand))
       @next_use  = T.let(nil, T.nilable(BlockOperand))
-
       set!(target) if target
     end
 
     # The operation that this block-operand belongs to.
     sig { returns(Operation) }
-    attr_reader :operation
+    attr_reader :owning_operation
 
     # This block-operand's index in the operation's block-operand array.
     sig { returns(Integer) }
@@ -99,7 +97,7 @@ module NPC
 
     # Reset this block-operand, to target a new block.
     sig { params(target: T.nilable(Block)).void }
-    def target=(target)
+    def reset!(target)
       unset! if set?
       set!(target) if target
     end

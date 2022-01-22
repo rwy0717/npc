@@ -33,7 +33,7 @@ module NPC
     end
     def each(&proc)
       Uses.new(@use).each do |use|
-        proc.call(use.operation)
+        proc.call(use.owning_operation)
       end
       self
     end

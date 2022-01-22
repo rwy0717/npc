@@ -1,8 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require("npc/use")
-
 module NPC
   # An input to an operation, and a reference to a value.
   class Operand
@@ -11,16 +9,15 @@ module NPC
 
     sig do
       params(
-        operation: Operation,
+        owning_operation: Operation,
         index: Integer,
         target: T.nilable(Value),
       ).void
     end
-    def initialize(operation, index, target = nil)
-      @operation = T.let(operation, Operation)
+    def initialize(owning_operation, index, target = nil)
+      @owning_operation = T.let(owning_operation, Operation)
       @index = T.let(index, Integer)
-
-      @target   = T.let(nil, T.nilable(Value))
+      @target = T.let(nil, T.nilable(Value))
       @prev_use = T.let(nil, T.nilable(Operand))
       @next_use = T.let(nil, T.nilable(Operand))
 
@@ -29,7 +26,7 @@ module NPC
 
     # The operation that this operand belongs to.
     sig { returns(Operation) }
-    attr_reader :operation
+    attr_reader :owning_operation
 
     # This operand's index in the operation's operand array.
     sig { returns(Integer) }
@@ -102,7 +99,7 @@ module NPC
 
     # Reset this operand to target a new value.
     sig { params(target: T.nilable(Value)).void }
-    def target=(target)
+    def reset!(target)
       unset! if set?
       set!(target) if target
     end

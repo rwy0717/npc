@@ -10,11 +10,17 @@ module NPC
       sig do
         params(
           callee: Symbol,
-          arguments: T::Array[Value]
+          arguments: T::Array[Value],
         ).void
       end
       def initialize(callee, arguments)
-        super()
+        super(
+          operands: arguments,
+          attributes: {
+            callee: callee,
+          },
+        )
+
         @callee    = callee
         @arguments = arguments
       end

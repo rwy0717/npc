@@ -12,7 +12,7 @@ module NPC
         super(
           location: location,
           operands: [],
-          results: [Result.new(self, 0)]
+          results: [I32],
         )
         @value = T.let(value, Integer)
       end

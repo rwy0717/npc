@@ -3,9 +3,10 @@
 
 module NPC
   module Core
-    class Bool
+    class BoolType < Type
       extend T::Sig
-      include Type
     end
+
+    Bool = T.let(BoolType.new, BoolType)
   end
 end

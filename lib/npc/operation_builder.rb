@@ -24,7 +24,7 @@ module NPC
     sig { params(at: OperationLink).void }
     def initialize(at:)
       @point = T.let(at, OperationLink)
-      @block = T.let(T.must(at.block), Block)
+      @block = T.let(at.parent_block!, Block)
     end
 
     ## Insertion point tracking and management.
@@ -34,7 +34,7 @@ module NPC
     sig { returns(T.nilable(Block)) }
     attr_reader :block
 
-    # Get a copy of the current insertion point.
+    # Get the current insertion point.
     sig { returns(OperationLink) }
     def insertion_point
       @point
@@ -43,7 +43,7 @@ module NPC
     # Set the insertion point of the builder.
     sig { params(point: OperationLink).returns(OperationLink) }
     def insertion_point=(point)
-      @block = T.must(point.block)
+      @block = point.parent_block!
       @point = point
     end
 

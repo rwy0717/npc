@@ -10,10 +10,13 @@ module NPC
   # A value that can be referenced or used within IR.
   class Value
     extend T::Sig
+    extend T::Helpers
+
+    abstract!
 
     sig { params(type: T.nilable(Type), first_use: T.nilable(Operand)).void }
     def initialize(type, first_use = nil)
-      @type = T.let(nil, T.nilable(Type))
+      @type      = T.let(type, T.nilable(Type))
       @first_use = T.let(first_use, T.nilable(Operand))
     end
 
@@ -23,24 +26,6 @@ module NPC
 
     sig { returns(T.nilable(Operand)) }
     attr_accessor :first_use
-
-    # If this is the result of an operation, get that operation.
-    sig { overridable.returns(T.nilable(Operation)) }
-    def defining_operation
-      nil
-    end
-
-    # Get the block this value is defined in.
-    sig { returns(T.nilable(Block)) }
-    def block
-      defining_operation&.block
-    end
-
-    # Get the region this value is defined in.
-    sig { returns(T.nilable(Region)) }
-    def region
-      block&.region
-    end
 
     # Does this have no uses?
     sig { returns(T::Boolean) }
@@ -57,6 +42,7 @@ module NPC
     # Does this have exactly one use?
     sig { returns(T::Boolean) }
     def used_once?
+      @first_use && !@first_use.next_use
       if @first_use
         @first_use.next_use.nil?
       else
@@ -64,11 +50,23 @@ module NPC
       end
     end
 
+    sig { abstract.returns(T.nilable(Operation)) }
+    def defining_operation; end
+
+    # Get the block this value is defined in.
+    sig { abstract.returns(T.nilable(Block)) }
+    def defining_block; end
+
+    # Get the region this value is defined in.
+    sig { abstract.returns(T.nilable(Region)) }
+    def defining_region; end
+
     # Are any users located in a different block than this?
     sig { returns(T::Boolean) }
     def used_outside_block?
+      b = defining_block
       users.any? do |user|
-        user.block != block
+        user.parent_block != b
       end
     end
 
@@ -104,7 +102,7 @@ module NPC
       end
 
       uses.each do |use|
-        use.target = other
+        use.reset!(other)
       end
     end
 
@@ -117,7 +115,7 @@ module NPC
     end
     def replace_uses_except!(other, exceptions)
       uses.each do |use|
-        use.target = other unless exceptions.include?(use)
+        use.reset!(other) unless exceptions.include?(use)
       end
     end
 
@@ -129,7 +127,7 @@ module NPC
     end
     def replace_uses_if!(other, &proc)
       uses.each do |use|
-        use.target = other if proc.call(use)
+        use.reset!(other) if proc.call(use)
       end
     end
 

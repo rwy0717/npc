@@ -38,10 +38,10 @@ require("npc/region")
 require("npc/storage")
 require("npc/trait")
 require("npc/type")
-require("npc/use")
 require("npc/users")
 require("npc/uses")
 require("npc/value")
+require("npc/one_region")
 
 # IR Dialects
 

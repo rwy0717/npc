@@ -56,46 +56,40 @@ module NPC
   class Region
     extend T::Sig
 
-    class << self
-      extend T::Sig
-
-      # sig { params(op: T.nilable(Operation), block: T.nilable(Block)).returns(Region) }
-      # def with_block(block = Block.new([]))
-      #   block ||= Block.new(arguments: [])
-      #   Region.new(op, block, [blocks])
-      # end
-    end
-
-    sig do
-      params(
-        operation: T.nilable(Operation),
-      ).void
-    end
-    def initialize(
-      operation: nil # The parent operation of this region.
-    )
-      @operation = T.let(operation, T.nilable(Operation))
+    sig { params(parent_operation: T.nilable(Operation)).void }
+    def initialize(parent_operation = nil)
+      @parent_operation = T.let(parent_operation, T.nilable(Operation))
       @sentinel = T.let(BlockSentinel.new(self), BlockSentinel)
     end
 
     # The parent/containing operation of this region.
     sig { returns(T.nilable(Operation)) }
-    attr_reader :operation
+    attr_reader :parent_operation
 
     sig { returns(Operation) }
-    def operation!
-      T.must(operation)
+    def parent_operation!
+      T.must(@parent_operation)
+    end
+
+    sig { returns(T.nilable(Block)) }
+    def parent_block
+      parent_operation&.parent_block
+    end
+
+    sig { returns(Block) }
+    def parent_block!
+      parent_operation!.parent_block!
     end
 
     # The region that contains this region.
     sig { returns(T.nilable(Region)) }
     def parent_region
-      operation&.region
+      parent_block&.parent_region
     end
 
     sig { returns(Region) }
     def parent_region!
-      T.must(parent_region)
+      parent_block!.parent_region!
     end
 
     ### Block Management
@@ -153,7 +147,7 @@ module NPC
     ## Remove a block from this region.
     sig { params(block: Block).returns(Region) }
     def remove_block!(block)
-      raise "block is not a child of this region" if self != block.region
+      raise "block is not a child of this region" if self != block.parent_region
       block.remove_from_region!
       self
     end
