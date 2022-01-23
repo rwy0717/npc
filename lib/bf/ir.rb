@@ -3,14 +3,10 @@
 
 module BF
   module IR
-    # Base IR
-
-    class Operation < NPC::Operation; end
-
-    class Program < NPC::NullaryOperation
+    class Program < NPC::Operation
       extend T::Sig
       extend T::Helpers
-      include NPC::NoResult
+      # include NPC::NoResult
 
       sig { void }
       def initialize
@@ -25,26 +21,33 @@ module BF
       attr_reader :body
     end
 
-    class Inc < NPC::NullaryOperation
-      include NPC::NoResult
+    class Inc < NPC::Operation; end
+
+    class Dec < NPC::Operation; end
+
+    class MoveL < NPC::Operation; end
+
+    class MoveR < NPC::Operation; end
+
+    class LoopL < NPC::Operation; end
+
+    class LoopR < NPC::Operation; end
+
+    class Print < NPC::Operation; end
+
+    class Read < NPC::Operation; end
+
+    class Loop < NPC::Operation
+      extend T::Sig
+      include NPC::OneRegion
 
       sig { void }
       def initialize
-        super()
+        super(
+          operands
+        )
       end
     end
-
-    class Dec < Operation; end
-
-    class MoveL < Operation; end
-
-    class MoveR < Operation; end
-
-    class LoopL < Operation; end
-
-    class LoopR < Operation; end
-
-    class Print < Operation; end
 
     # Extended IR
 
@@ -59,14 +62,14 @@ module BF
       end
     end
 
-    class Add < Operation; end
+    class Add < NPC::Operation; end
 
-    class Sub < Operation; end
+    class Sub < NPC::Operation; end
 
-    class Store < Operation; end
+    class Store < NPC::Operation; end
 
-    class Load < Operation; end
+    class Load < NPC::Operation; end
 
-    class Move < Operation; end
+    class Move < NPC::Operation; end
   end
 end

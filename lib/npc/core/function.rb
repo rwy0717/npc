@@ -29,6 +29,27 @@ module NPC
       def name
         T.cast(attribute(:name), String)
       end
+
+      sig {returns(Block) }
+      def entry_block
+        body_region.first_block!
+      end
+
+      # Add a new block to the end of the body region.
+      sig { params(argument_types: T::Array[Type]).returns(Block) }
+      def new_block!(argument_types = [])
+        append_block!(Block.new(argument_types))
+      end
+
+      sig { params(block: Block).returns(Block) }
+      def prepend_block!(block)
+        body_region.prepend_block!(block)
+      end
+
+      sig { params(block: Block).returns(Block) }
+      def append_block!(block)
+        body_region.append_block!(block)
+      end
     end
   end
 end

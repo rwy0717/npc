@@ -301,7 +301,7 @@ module NPC
     attr_accessor :next_link
 
     ## Insert this block into a region.
-    sig { params(cursor: BlockLink).void }
+    sig { params(cursor: BlockLink).returns(T.self_type) }
     def insert_into_region!(cursor)
       raise "block already in region" if
         @parent_region || @prev_link || @next_link
@@ -312,6 +312,8 @@ module NPC
 
       @prev_link.next_link = self
       @next_link.prev_link = self
+
+      self
     end
 
     ## Remove this block from it's region.

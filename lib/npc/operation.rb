@@ -419,7 +419,7 @@ module NPC
 
     # Insert this operation into a block.
     # Will fail if already in block.
-    sig { params(prev: OperationLink).void }
+    sig { params(prev: OperationLink).returns(T.self_type) }
     def insert_into_block!(prev)
       raise "operation already in block" if
         @parent || @prev_link || @next_link
@@ -430,11 +430,13 @@ module NPC
 
       @prev_link.next_link = self
       @next_link.prev_link = self
+
+      self
     end
 
     # Remove this operation from it's block.
     # Will fail if this operation is not in a block.
-    sig { void }
+    sig { returns(T.self_type) }
     def remove_from_block!
       raise "operation not in block" unless
         @parent && @prev_link && @next_link
@@ -445,6 +447,8 @@ module NPC
       @parent = nil
       @prev_link = nil
       @next_link = nil
+
+      self
     end
 
     # Remove this operation from it's current block (if applicable),

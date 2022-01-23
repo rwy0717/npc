@@ -115,9 +115,19 @@ module NPC
       @sentinel.next_block
     end
 
+    sig { returns(Block) }
+    def first_block!
+      T.must(first_block)
+    end
+
     sig { returns(T.nilable(Block)) }
     def last_block
       @sentinel.prev_block
+    end
+
+    sig { returns(Block) }
+    def last_block!
+      T.must(last_block)
     end
 
     sig { returns(T::Boolean) }
@@ -130,18 +140,16 @@ module NPC
       BlocksInRegion.new(@first_block)
     end
 
-    ## Insert a block at the beginning of this region.
-    sig { params(block: Block).returns(Region) }
+    ## Insert a block at the beginning of this region. Returns the inserted block.
+    sig { params(block: Block).returns(Block) }
     def prepend_block!(block)
       block.insert_into_region!(front)
-      self
     end
 
-    ## Insert a block into this region.
-    sig { params(block: Block).returns(Region) }
+    ## Insert a block into this region. Returns the inserted block.
+    sig { params(block: Block).returns(Block) }
     def append_block!(block)
       block.insert_into_region!(back)
-      self
     end
 
     ## Remove a block from this region.

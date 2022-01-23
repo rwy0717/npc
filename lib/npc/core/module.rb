@@ -16,6 +16,12 @@ module NPC
       end
       def initialize(name, loc: nil)
         super(regions: 1, loc: loc)
+        body_region.append_block!(Block.new)
+      end
+
+      sig { returns(Block) }
+      def body_block
+        body_region.first_block!
       end
     end
   end

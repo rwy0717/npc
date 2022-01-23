@@ -48,9 +48,23 @@ module NPC
       @point = point
     end
 
+    sig { returns(OperationLink) }
+    def insertion_point
+      @point
+    end
+
+    sig { params(point: OperationLink).void }
+    def set_insertion_point!(point)
+      @point = point
+    end
+
     # Insert the op at the current insertion point and move the insertion point forwards.
     # Returns the inserted op.
-    sig { params(operation: Operation).returns(Operation) }
+    sig do
+      type_parameters(:T)
+        .params(operation: T.type_parameter(:T))
+        .returns(T.type_parameter(:T))
+    end
     def insert!(operation)
       operation.insert_into_block!(@point)
       @point = operation
