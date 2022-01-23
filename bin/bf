@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# typed: strict
+# frozen_string_literal: true
+
+require "rubygems"
+require "bundler"
+
+Bundler.setup(
+  :default,
+  :development,
+  :test,
+)
+
+require "npc"
+require "bf"
+require "optparse"
+
+
+command = :unknown
+output_filename = nil
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: bfc [option...] <input>"
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do
+    command = :version
+  end
+  opts.on("-h", "--help", "Print help") do
+    command = :help
+  end
+  opts.on("-d", "--dump", "Dump the IR of the input program") do
+    command = :dump
+  end
+  opts.on("-i", "--interpret", "Interpret the input program") do
+    command = :interpret
+  end
+  opts.on("-o", "--out=FILE", String, "Specify Output file") do |s|
+    output_filename = s
+  end
+end
+
+def help
+  puts parser
+end
+
+def version
+  puts VERSION
+end
+
+def interpret
+  filename = ARGV.fetch(0)
+  program = File.read(filename)
+  puts BF::Interpreter.call_str(program)
+end
+
+def dump(options, file)
+  p(ARGV)
+  f = File.read(file)
+  p(BF::IRGen.run(f))
+end
+
+parser.parse!
+
+case command
+when :help
+  help
+when :version
+  version
+when :interpret
+  interpret
+when :dump
+  dump
+else
+  help
+  exit(1)
+end
