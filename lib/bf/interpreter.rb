@@ -31,7 +31,7 @@ module BF
 
       sig { params(ary: T::Array[Integer]).returns(String) }
       def ary_to_str(ary)
-        ary.pack('c*')
+        ary.pack("c*")
       end
 
       sig { params(str: String).returns(T::Array[Integer]) }
@@ -76,13 +76,13 @@ module BF
     def move_left
       @data_index -= 1
     end
-    
+
     sig { void }
     def move_right
       @data_index += 1
     end
 
-    sig { void } 
+    sig { void }
     def increment
       set_data(get_data + 1)
     end
@@ -121,7 +121,7 @@ module BF
     sig { void }
     def jump_backward_if_nonzero
       return unless get_data != 0
-  
+
       depth = 1
       until depth == 0
         @prog_index -= 1

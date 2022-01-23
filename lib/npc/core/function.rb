@@ -30,7 +30,7 @@ module NPC
         T.cast(attribute(:name), String)
       end
 
-      sig {returns(Block) }
+      sig { returns(Block) }
       def entry_block
         body_region.first_block!
       end

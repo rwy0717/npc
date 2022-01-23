@@ -15,7 +15,6 @@ require "npc"
 require "bf"
 require "optparse"
 
-
 command = :unknown
 output_filename = nil
 
