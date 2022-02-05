@@ -87,6 +87,15 @@ module NPC
       T.must(parent_operation)
     end
 
+    sig { returns(T.nilable(Operation)) }
+    def root_operation
+      op = self
+      while op.parent_operation
+        op = op.parent_operation
+      end
+      op
+    end
+
     sig { returns(OperationLink) }
     def prev_link!
       T.must(prev_link)
@@ -286,6 +295,7 @@ module NPC
       params(
         results: T::Array[Type],
         operands: T::Array[T.nilable(Value)],
+        block_operands: T::Array[T.nilable(Block)],
         attributes: T::Hash[Symbol, T.untyped],
         successors: T::Array[T.nilable(Block)],
         regions: Integer,
@@ -295,6 +305,7 @@ module NPC
     def initialize(
       results: [],
       operands: [],
+      block_operands: [],
       attributes: {},
       successors: [],
       regions: 0,
@@ -305,22 +316,33 @@ module NPC
         new_operand(value)
       end
 
+      @block_operands = T.let([], T::Array[BlockOperand])
+      block_operands.each do |block|
+        new_block_operand(block)
+      end
+
       @results = T.let([], T::Array[Result])
       results.each do |type|
         new_result(type)
       end
 
       @regions = T.let([], T::Array[Region])
-      regions.loop do
-        @regions.push_back(Region.new)
+      regions.times do
+        @regions.push(Region.new)
       end
 
       @attributes = T.let(attributes, T::Hash[Symbol, T.untyped])
 
+      @parent_block = T.let(nil, T.nilable(Block))
       @prev_link = T.let(nil, T.nilable(OperationLink))
       @next_link = T.let(nil, T.nilable(OperationLink))
 
       @location  = T.let(loc, T.nilable(Location))
+    end
+
+    sig { overridable.returns(String) }
+    def operator_name
+      self.class.name
     end
 
     # @!group Attributes
@@ -347,7 +369,7 @@ module NPC
     # Block-operands are the potential targets of branching control flow operations.
     sig { returns(T::Array[BlockOperand]) }
     def block_operands
-      @parent_operands
+      @block_operands
     end
 
     # Push a new block-operand onto the end of the block-operand array.
@@ -411,9 +433,9 @@ module NPC
     sig { params(block: T.nilable(Block)).returns(T::Boolean) }
     def in_block?(block = nil)
       if block
-        @parent.equal?(block)
+        @parent_block.equal?(block)
       else
-        !@parent.nil?
+        !@parent_block.nil?
       end
     end
 
@@ -422,9 +444,9 @@ module NPC
     sig { params(prev: OperationLink).returns(T.self_type) }
     def insert_into_block!(prev)
       raise "operation already in block" if
-        @parent || @prev_link || @next_link
+        @parent_block || @prev_link || @next_link
 
-      @parent = T.must(prev.parent)
+      @parent_block = prev.parent_block!
       @prev_link = prev
       @next_link = prev.next_link!
 
@@ -527,9 +549,9 @@ module NPC
     end
 
     # Push a new result onto the end of the result array.
-    sig { returns(Result) }
-    def new_result
-      result = Result.new(self, results.length)
+    sig { params(type: Type).returns(Result) }
+    def new_result(type)
+      result = Result.new(self, results.length, type)
       results << result
       result
     end
@@ -636,6 +658,13 @@ module NPC
       end
 
       true
+    end
+
+    sig { returns(String) }
+    def to_s
+      io = StringIO.new
+      Printer.print_operation(self, out: io)
+      io.string
     end
   end
 end

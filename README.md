@@ -11,6 +11,7 @@ NPC is a generic high-level framework for writing compilers, heavily (heavily!) 
 ```
 
 ## Setting up NPC
+
 Add this to your gemfile:
 
 ```
@@ -18,6 +19,7 @@ gem "npc", version "~> 0.1.0"
 ```
 
 NPC uses sorbet. Sorbet must be run with the option:
+
 ```
 --enable-experimental-requires-ancestor
 ```
@@ -30,6 +32,3 @@ sorbet is always run with it.
 - Do we need an attribute dictionary
 - Rename uses to users? Is there a difference?
   - Maybe operand is a use, operation is a user?
-
-
-## FAQ

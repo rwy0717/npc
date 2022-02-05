@@ -51,10 +51,11 @@ def interpret
   puts BF::Interpreter.call_str(program)
 end
 
-def dump(options, file)
-  p(ARGV)
-  f = File.read(file)
-  p(BF::IRGen.run(f))
+def dump
+  filename = ARGV.fetch(0)
+  program = File.read(filename)
+  ir = BF::IRGen.run(program)
+  NPC::Printer.print_operation(ir)
 end
 
 parser.parse!

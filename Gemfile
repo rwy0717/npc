@@ -9,7 +9,7 @@ gem "awesome_print"
 group :development, :test do
   gem "minitest-focus"
   gem "minitest"
-  gem "pry-byebug"
+  gem "pry-byebug", "~> 3.9"
   gem "pry-sorbet"
   gem "pry"
   gem "rake", require: false

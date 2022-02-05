@@ -3,5 +3,11 @@
 
 module NPC
   class Type
+    extend T::Sig
+
+    sig { overridable.returns(String) }
+    def name
+      T.must(self.class.name)
+    end
   end
 end

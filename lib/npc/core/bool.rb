@@ -7,6 +7,6 @@ module NPC
       extend T::Sig
     end
 
-    Bool = T.let(BoolType.new, BoolType)
+    BOOL_TYPE = T.let(BoolType.new, BoolType)
   end
 end

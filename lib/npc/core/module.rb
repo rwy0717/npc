@@ -19,6 +19,11 @@ module NPC
         body_region.append_block!(Block.new)
       end
 
+      sig { override.returns(String) }
+      def operator_name
+        "module"
+      end
+
       sig { returns(Block) }
       def body_block
         body_region.first_block!

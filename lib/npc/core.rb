@@ -11,6 +11,7 @@ end
 require_relative("core/call")
 require_relative("core/const")
 require_relative("core/function")
+require_relative("core/goto")
 require_relative("core/i32_add")
 require_relative("core/i32_const")
 require_relative("core/i32")

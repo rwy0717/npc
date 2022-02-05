@@ -5,7 +5,7 @@
 # require("minitest/autorun")
 
 # HELLO_WORLD =
-#   "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+#   ""
 
 # class TestInterpreter < Minitest::Test
 #   extend T::Sig

@@ -7,18 +7,21 @@ module NPC
       extend T::Sig
       include Const
 
-      sig { params(location: Location, value: Integer).void }
-      def initialize(location, value)
+      sig { params(value: Integer, loc: T.nilable(Location)).void }
+      def initialize(value, loc: nil)
         super(
-          location: location,
-          operands: [],
+          attributes: {
+            value: value,
+          },
           results: [I32],
+          loc: loc,
         )
-        @value = T.let(value, Integer)
       end
 
-      sig { returns(Integer) }
-      attr_reader :value
+      sig { override.returns(String) }
+      def operator_name
+        "i32.const"
+      end
     end
   end
 end

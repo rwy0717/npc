@@ -3,7 +3,7 @@
 
 module NPC
   module Core
-    class AddI32 < Operation
+    class I32Add < Operation
       extend T::Sig
 
       sig do
@@ -15,10 +15,15 @@ module NPC
       end
       def initialize(lhs = nil, rhs = nil, loc: nil)
         super(
-          [I32, I32],
-          [I32],
+          operands: [lhs, rhs],
+          results: [I32],
           loc: loc,
         )
+      end
+
+      sig { override.returns(String) }
+      def operator_name
+        "i32.add"
       end
 
       sig { returns(Operand) }
@@ -31,10 +36,10 @@ module NPC
         operands.fetch(1)
       end
 
-      sig { returns(Result) }
-      def result
-        results.fetch(0)
-      end
+      # sig { returns(Result) }
+      # def result
+      #   results.fetch(0)
+      # end
     end
   end
 end

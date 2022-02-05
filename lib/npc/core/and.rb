@@ -12,7 +12,7 @@ module NPC
         super
         new_operand
         new_operand
-        new_result
+        new_result(BOOL_TYPE)
       end
 
       sig { returns(Operand) }

@@ -33,7 +33,7 @@ module NPC
 
       # Try to coerce a value into a compile time constant.
       # Returns nil if the
-      sig { params(value: Value).returns(T.nilable(T.untyped)) }
+      sig { params(value: Value).returns(T.untyped) }
       def constant_value(value)
         return nil unless value.is_a?(Result)
 
@@ -46,7 +46,7 @@ module NPC
 
     # Coerce a result into a compile-time constant value.
     # returns nil if the result is nonconstant.
-    sig { abstract.params(result: Result).returns(T.nilable(T.untyped)) }
+    sig { abstract.params(result: Result).returns(T.untyped) }
     def constant_result(result); end
 
     # Check if a result is a compile-time constant.

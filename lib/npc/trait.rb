@@ -3,7 +3,6 @@
 
 module NPC
   # A mixin for operators definitions.
-
   module Trait
     extend T::Sig
 

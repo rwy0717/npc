@@ -75,6 +75,7 @@ module NPC
     def set!(target)
       raise "operand target already set" unless @target.nil?
 
+      @target = target
       @next_use = target.first_use
       @next_use.prev_use = self if @next_use
       target.first_use = self

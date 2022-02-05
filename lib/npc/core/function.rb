@@ -12,17 +12,26 @@ module NPC
         params(
           name: String,
           region: Region,
+          # parameter_types: T::Array[Type],
+          # result_types: 
           loc: T.nilable(Location),
         ).void
       end
       def initialize(name, region = Region.new, loc: nil)
         super(
-          location: loc,
           regions: 1,
           attributes: {
             name: name,
-          }
+          },
+          loc: loc,
         )
+
+        region(0).append_block!(Block.new)
+      end
+
+      sig { override.returns(String) }
+      def operator_name
+        "function"
       end
 
       sig { returns(String) }

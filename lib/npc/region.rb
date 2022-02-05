@@ -137,13 +137,14 @@ module NPC
 
     sig { returns(BlocksInRegion) }
     def blocks
-      BlocksInRegion.new(@first_block)
+      BlocksInRegion.new(self)
     end
 
     ## Insert a block at the beginning of this region. Returns the inserted block.
     sig { params(block: Block).returns(Block) }
     def prepend_block!(block)
       block.insert_into_region!(front)
+      block
     end
 
     ## Insert a block into this region. Returns the inserted block.
