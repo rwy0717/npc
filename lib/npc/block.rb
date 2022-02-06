@@ -377,12 +377,12 @@ module NPC
       back.prev_link!
     end
 
-    ## The link before the block's terminating operation. If the last operatopm
+    ## The link before the block's terminating operation. If the last operator
     ## is not a terminator, just return the last operation.
     sig { returns(OperationLink) }
     def before_terminator
       op = back
-      T.must(op.is_a?(Terminator) ? op.prev_link : op)
+      op.is_a?(Terminator) ? op.prev_link! : op
     end
 
     ## The first operation in this block. Nil if this block is empty.
