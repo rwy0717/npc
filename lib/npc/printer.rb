@@ -246,7 +246,12 @@ module NPC
         print_block_operands(operation.block_operands)
       end
 
-      if operation.regions.any?
+      case operation.regions.length
+      when 0 # do nothing
+      when 1
+        print(" ")
+        print_region_contents(operation.region(0))
+      else
         indent do
           print_regions(operation.regions)
         end
@@ -372,17 +377,45 @@ module NPC
     def print_region(region)
       print("&")
       print(table.region_name(region))
+      print(" ")
+      print_region_contents(region)
+      self
+    end
+
+    sig { params(region: Region).returns(T.self_type) }
+    def print_region_inline(region)
+      print("&")
+      print(table.region_name(region))
+      print(" ")
+      print_region_contents(region)
+      self
+    end
+
+    sig { params(region: Region).returns(T.self_type) }
+    def print_region_contents(region)
+      # print the inner objects of the region, but not the label.
+      # binding.pry
+
+      print("{")
 
       if region.empty?
-        print(" {}")
+        print("}")
         return self
       end
 
-      print(" {")
-
-      indent do
-        print_blocks(region.blocks)
+      if region.one_block?
+        block = region.first_block!
+        if block.unused?
+          print(" ")
+          indent { print_block_inline(block) }
+          print("\n")
+          print_indentation
+          print("}")
+          return self
+        end
       end
+
+      indent { print_blocks(region.blocks) }
       print("\n")
       print_indentation
       print("}")
@@ -404,17 +437,22 @@ module NPC
     def print_block(block)
       print("^")
       print(table.block_name(block))
-
       if block.arguments.any?
         print_arguments(block.arguments)
       end
-
       print(":")
       indent do
         print_operations(block.operations)
       end
+    end
 
-      self
+    sig { params(block: Block).returns(T.self_type) }
+    def print_block_inline(block)
+      if block.arguments.any?
+        print_arguments(block.arguments)
+        print(" ->")
+      end
+      print_operations(block.operations)
     end
 
     sig { params(arguments: T::Array[Argument]).returns(T.self_type) }

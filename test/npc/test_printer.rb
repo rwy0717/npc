@@ -8,8 +8,9 @@ class TestPrinter < Minitest::Test
 
   sig { void }
   def test_print
-    binding.pry
+    # binding.pry
     m = NPC::Core::Module.new(:example)
+    m.region(0).first_block!.add_argument(NPC::Core::I32)
 
     f = NPC::Core::Function.new("test") #  [I32_TYPE, I32_TYPE], i32)
     m.region(0).first_block!.append_operation!(f)
@@ -23,7 +24,7 @@ class TestPrinter < Minitest::Test
     block = NPC::Block.new([NPC::Core::I32, NPC::Core::I32])
     f.region(0).append_block!(block)
     g = b1.insert!(NPC::Core::Goto.new(block, [y.result, z.result]))
-  
+
     block.append_operation!(NPC::Core::I32Const.new(111))
 
     f2 = NPC::Core::Function.new("another_test")
