@@ -87,12 +87,11 @@ module NPC
       T.must(parent_operation)
     end
 
+    # The root of the program, the greatest ancestor of this operation.
     sig { returns(T.nilable(Operation)) }
     def root_operation
       op = self
-      while op.parent_operation
-        op = op.parent_operation
-      end
+      op = op.parent_operation while op.parent_operation
       op
     end
 
@@ -365,7 +364,7 @@ module NPC
 
     # @!group Block Operands / Successor Regions
 
-    # The underlying blockerands array of this op.
+    # The underlying block-operands array of this op.
     # Block-operands are the potential targets of branching control flow operations.
     sig { returns(T::Array[BlockOperand]) }
     def block_operands
@@ -403,9 +402,6 @@ module NPC
 
     # Get the block that this operation is in.
     # Nil if this operation is not inserted into a block.
-    # @todo: Should we rename this to parent_block?
-    # Calling it "block" is confusing if the operation has a single-block body,
-    # for example a module op.
     sig { override.returns(T.nilable(Block)) }
     attr_reader :parent_block
 
