@@ -1,4 +1,5 @@
 --dir
 .
 --ignore=/vendor/bundle
+--ignore=/scratch
 --enable-experimental-requires-ancestor
