@@ -411,6 +411,13 @@ module NPC
       @sentinel.next_link == @sentinel
     end
 
+    sig { returns(T::Boolean) }
+    def one_operation?
+      n = @sentinel.next_link
+      p = @sentinel.prev_link
+      n != p && n.next_link == p
+    end
+
     ## An enumerable that walks the operations in this block.
     sig { returns(OperationsInBlock) }
     def operations
