@@ -3,14 +3,23 @@
 NPC is a generic high-level framework for writing compilers, heavily (heavily!) based on MLIR in the LLVM-Project.
 
 ```
-(core/module "hello_world"
-  (core/func "main" [] i32
-    (= %0 (wasm/i32.const 1234))
-    (= %1 (wasm/i32.const 5678))
-    (= %2 (wasm/i32.add %0 %1))))
+module { 
+  function[name: test] {
+    ^block0:
+      %0: i32 = i32.const[value: 123];
+      %1: i32 = i32.const[value: 456];
+      %2: i32 = i32.add(%0, %1);
+      goto(%1, %2)(^block1);
+    ^block1(%3: i32, %4: i32):
+      %5: i32 = i32.const[value: 111];
+  };
+  function[name: another_test] { (%0: i32) ->
+    %1: i32 = i32.const[value: 789];
+  };
+}
 ```
 
-## Setting up NPC
+## Using NPC
 
 Add this to your gemfile:
 
@@ -26,6 +35,15 @@ NPC uses sorbet. Sorbet must be run with the option:
 
 This option can be placed in the file `sorbet/config`, to ensure
 sorbet is always run with it.
+
+## Development
+
+```
+git clone https://github.com/rwy0717/npc
+cd npc
+bundle install
+bundle exec rake test
+```
 
 ## TODO
 
