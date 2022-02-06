@@ -135,6 +135,11 @@ module NPC
       @sentinel.next_link == @sentinel
     end
 
+    sig { returns(T::Boolean) }
+    def one_block?
+      !empty? && @sentinel.next_link!.next_link! == @sentinel
+    end
+
     sig { returns(BlocksInRegion) }
     def blocks
       BlocksInRegion.new(self)
