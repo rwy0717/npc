@@ -5,7 +5,7 @@ module NPC
   module Core
     class Goto < Operation
       extend T::Sig
-    #   include Terminator
+      #   include Terminator
 
       sig do
         params(

@@ -13,7 +13,7 @@ module NPC
           name: String,
           region: Region,
           # parameter_types: T::Array[Type],
-          # result_types: 
+          # result_types:
           loc: T.nilable(Location),
         ).void
       end

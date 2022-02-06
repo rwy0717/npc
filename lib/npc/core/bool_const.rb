@@ -12,7 +12,7 @@ module NPC
       def initialize(value)
         super
         @value = T.let(value, T::Boolean)
-        new_result(BOOL_TYPE)
+        new_result(Bool)
       end
 
       # Get the compile-time boolean value of this constant operation.
