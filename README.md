@@ -24,10 +24,10 @@ module {
 Add this to your gemfile:
 
 ```
-gem "npc", version "~> 0.1.0"
+gem "npc", git: "https://github.com/rwy0717/npc.git"
 ```
 
-NPC uses sorbet. Sorbet must be run with the option:
+NPC uses sorbet for type-checking. Sorbet should be run with the option:
 
 ```
 --enable-experimental-requires-ancestor
@@ -44,9 +44,3 @@ cd npc
 bundle install
 bundle exec rake test
 ```
-
-## TODO
-
-- Do we need an attribute dictionary
-- Rename uses to users? Is there a difference?
-  - Maybe operand is a use, operation is a user?
