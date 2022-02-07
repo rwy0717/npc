@@ -367,9 +367,7 @@ module NPC
     # The underlying block-operands array of this op.
     # Block-operands are the potential targets of branching control flow operations.
     sig { returns(T::Array[BlockOperand]) }
-    def block_operands
-      @block_operands
-    end
+    attr_reader :block_operands
 
     # Push a new block-operand onto the end of the block-operand array.
     sig { params(target: T.nilable(Block)).returns(BlockOperand) }
@@ -384,6 +382,11 @@ module NPC
     sig { returns(T::Array[Block]) }
     def successors
       block_operands.map(&:get).compact
+    end
+
+    sig { returns(ArrayIterator[Block]) }
+    def successors_iter
+      ArrayIterator.new(successors)
     end
 
     # @!group Regions
@@ -661,6 +664,11 @@ module NPC
       io = StringIO.new
       Printer.print_operation(self, out: io)
       io.string
+    end
+
+    sig { returns(String) }
+    def inspect
+      "<operation:#{object_id}>"
     end
   end
 end

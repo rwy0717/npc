@@ -3,7 +3,7 @@
 NPC is a generic high-level framework for writing compilers, heavily (heavily!) based on MLIR in the LLVM-Project.
 
 ```
-module { 
+module[name: example] { 
   function[name: test] {
     ^block0:
       %0: i32 = i32.const[value: 123];
@@ -12,11 +12,13 @@ module {
       goto(%1, %2)(^block1);
     ^block1(%3: i32, %4: i32):
       %5: i32 = i32.const[value: 111];
+      return(%3);
   };
   function[name: another_test] { (%0: i32) ->
     %1: i32 = i32.const[value: 789];
+    return(%1);
   };
-}
+};
 ```
 
 ## Using NPC

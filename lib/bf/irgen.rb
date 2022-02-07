@@ -19,7 +19,7 @@ module BF
 
     sig { params(prog: String).returns(NPC::Core::Module) }
     def run(prog)
-      mod = NPC::Core::Module.new(:program)
+      mod = NPC::Core::Module.new("program")
       fun = NPC::Core::Function.new("main")
 
       mod.body_block.append_operation!(fun)

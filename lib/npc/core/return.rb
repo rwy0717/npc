@@ -3,28 +3,26 @@
 
 module NPC
   module Core
-    class Goto < Operation
+    class Return < Operation
       extend T::Sig
       include Terminator
 
       sig do
         params(
-          target: T.nilable(Block),
-          arguments: T::Array[T.nilable(Value)],
+          value: T.nilable(Value),
           loc: T.nilable(Location),
         ).void
       end
-      def initialize(target, arguments = [], loc: nil)
+      def initialize(value, loc: nil)
         super(
-          block_operands: [target],
-          operands: arguments,
+          operands: [value],
           loc: loc
         )
       end
 
       sig { override.returns(String) }
       def operator_name
-        "goto"
+        "return"
       end
     end
   end

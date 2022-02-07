@@ -349,6 +349,11 @@ module NPC
     sig { returns(T::Array[Argument]) }
     attr_reader :arguments
 
+    sig { params(index: Integer).returns(Argument) }
+    def argument(index = 0)
+      arguments.fetch(index)
+    end
+
     ## Append a new argument to this block. Returns the new argument.
     sig { params(type: Type).returns(Argument) }
     def add_argument(type)
@@ -456,6 +461,16 @@ module NPC
     sig { returns(T::Array[Block]) }
     def successors
       terminator&.successors || []
+    end
+
+    sig { returns(ArrayIterator[Block]) }
+    def successors_iter
+      ArrayIterator.new(successors)
+    end
+
+    sig { returns(String) }
+    def inspect
+      "<block:#{object_id}>"
     end
   end
 end

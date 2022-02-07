@@ -10,12 +10,18 @@ module NPC
 
       sig do
         params(
-          name: Symbol,
+          name: T.nilable(String),
           loc: T.nilable(Location),
         ).void
       end
-      def initialize(name, loc: nil)
-        super(regions: 1, loc: loc)
+      def initialize(name = nil, loc: nil)
+        super(
+          attributes: {
+            name: name,
+          },
+          regions: 1,
+          loc: loc
+        )
         body_region.append_block!(Block.new)
       end
 

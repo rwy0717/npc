@@ -3,6 +3,7 @@
 
 # Dependencies
 
+require("set")
 require("sorbet-runtime")
 require("pp")
 
@@ -28,6 +29,7 @@ require("npc/builder")
 require("npc/foldable")
 require("npc/function_type")
 require("npc/in_block")
+require("npc/iteration")
 require("npc/located")
 require("npc/location")
 require("npc/operand")
@@ -36,7 +38,9 @@ require("npc/printer")
 require("npc/pure")
 require("npc/region")
 require("npc/storage")
+require("npc/terminator")
 require("npc/trait")
+require("npc/traversal")
 require("npc/type")
 require("npc/users")
 require("npc/uses")

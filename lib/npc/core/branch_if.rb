@@ -3,28 +3,30 @@
 
 module NPC
   module Core
-    class Goto < Operation
+    class BranchIf < Operation
       extend T::Sig
       include Terminator
 
       sig do
         params(
-          target: T.nilable(Block),
+          predicate: T.nilable(Value),
+          then_target: T.nilable(Block),
+          else_target: T.nilable(Block),
           arguments: T::Array[T.nilable(Value)],
           loc: T.nilable(Location),
         ).void
       end
-      def initialize(target, arguments = [], loc: nil)
+      def initialize(predicate, then_target, else_target, arguments = [], loc: nil)
         super(
-          block_operands: [target],
-          operands: arguments,
+          operands: [predicate, *arguments],
+          block_operands: [then_target, else_target],
           loc: loc
         )
       end
 
       sig { override.returns(String) }
       def operator_name
-        "goto"
+        "branch_if"
       end
     end
   end

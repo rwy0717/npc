@@ -1,8 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require("npc/core/bool")
-
 module NPC
   module Core
     class BoolConst < Operation
@@ -10,20 +8,18 @@ module NPC
 
       sig { params(value: T::Boolean).void }
       def initialize(value)
-        super
-        @value = T.let(value, T::Boolean)
-        new_result(Bool)
+        super(
+          attributes: {
+            value: value,
+          },
+          results: [Bool]
+        )
       end
 
-      # Get the compile-time boolean value of this constant operation.
-      sig { returns(T::Boolean) }
-      def value
-        T.cast(attribute(:constant), T::Boolean)
+      sig { override.returns(String) }
+      def operator_name
+        "bool_const"
       end
-
-      # sig { override.params(result: Result).returns(T.untyped) }
-      # def constant_result(result)
-      # end
     end
   end
 end

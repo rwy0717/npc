@@ -6,10 +6,10 @@ module NPC
     class BlockInfo
       extend T::Sig
 
-      sig { params(block: Block) }
+      sig { params(block: Block).void }
       def initialize(block)
         @block = block
-        @index_table = T.let({}, T::Hash[Operation, Index])
+        @index_table = T.let({}, T::Hash[Operation, Integer])
 
         block.operations.each_with_index do |operation, index|
           @index_table[operation] = index
@@ -31,10 +31,11 @@ module NPC
     class RegionInfo
       extend T::Sig
 
-      sig { params(region: Region) }
+      sig { params(region: Region).void }
       def initialize(region)
-        @region = region
+        @region = T.let(region, Region)
         @block_info_table = T.let({}, T::Hash[Block, BlockInfo])
+        @dom_tree = T.let(nil, T.nilable(DominatorTree))
       end
 
       sig { params(block: Block).returns(BlockInfo) }
@@ -43,12 +44,17 @@ module NPC
         @block_info_table[block] ||= BlockInfo.new(block)
       end
 
+      sig { returns(DominatorTree) }
+      def dom_tree
+        @dom_tree ||= DomTree.new(@region)
+      end
+
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
       def dominates(a, b)
         block_a = a.parent_block!
         block_b = b.parent_block!
         if block_a == block_b
-          return block_info(blk).dominates(a, b)
+          return block_info(block_a).dominates(a, b)
         end
         block_dominates(block_a, block_b)
       end
@@ -60,7 +66,7 @@ module NPC
 
       sig { params(a: Block, b: Block).returns(T::Boolean) }
       def block_dominates(a, b)
-        get_dom_tree.block_dominates(a, b)
+        dom_tree.block_dominates(a, b)
       end
     end
 
@@ -71,7 +77,7 @@ module NPC
       @region_info_table = T.let({}, T::Hash[Region, RegionInfo])
     end
 
-    sig { returns(RegionInfo) }
+    sig { params(region: Region).returns(RegionInfo) }
     def region_info(region)
       @region_info_table[region] ||= RegionInfo.new(region)
     end
@@ -130,7 +136,7 @@ module NPC
     # If determining strict domination, then:
     #   a does not dominate itself, or any descendent operations.
     # Determines non-strict domination by default.
-    sig { params(a: Block, b: Block).returns(T::Boolean) }
+    sig { params(a: Block, b: Block, strict: T::Boolean).returns(T::Boolean) }
     def block_dominates(a, b, strict: false)
       region_a = a.parent_region!
       b = block_ancestor_in_region(b, region_a)

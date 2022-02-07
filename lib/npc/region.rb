@@ -181,5 +181,10 @@ module NPC
     def operations
       OperationsInRegion.new(self)
     end
+
+    sig { returns(String) }
+    def inspect
+      "<region:#{object_id}>"
+    end
   end
 end
