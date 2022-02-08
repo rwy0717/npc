@@ -42,9 +42,9 @@ class TestPostOrderIter < MiniTest::Test
     b2 = r.append_block!(NPC::Block.new)
     b3 = r.append_block!(NPC::Block.new)
 
-    t = NPC::Core::BoolConst.new(true);
-    
-    b0.append_operation!(t);
+    t = NPC::Core::BoolConst.new(true)
+
+    b0.append_operation!(t)
     b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
     b1.append_operation!(NPC::Core::Goto.new(b3))
     b2.append_operation!(NPC::Core::Goto.new(b3))

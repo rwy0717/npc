@@ -1,5 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
+
 # Basic external iterators.
 
 module NPC
@@ -53,9 +54,7 @@ module NPC
     sig { returns(T::Array[Elem]) }
     def to_a!
       a = []
-      while more?
-        a << next!
-      end
+      a << next! while more?
       a
     end
   end

@@ -93,7 +93,7 @@ module NPC
     # False if the block has already been visited.
     sig { params(block: Block).returns(T::Boolean) }
     def mark!(block)
-      @visited.add?(block) != nil
+      !@visited.add?(block).nil?
     end
 
     sig { params(block: Block).returns(Frame) }

@@ -4,7 +4,6 @@
 require_relative("test")
 
 class TestIterator < Minitest::Test
-
   # The following tests if we can implement the iter
   # interface with a fixed type.
   # !!! WARNING, HOLY FUCK SORBET

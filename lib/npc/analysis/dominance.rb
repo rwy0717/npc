@@ -68,7 +68,6 @@ module NPC
 
     # Information about when a block dominates another in a given region
     class DominatorTree
-
       class Node < T::Struct
         extend T::Sig
 
@@ -130,9 +129,7 @@ module NPC
       end
 
       sig { returns(T::Hash[Block, Node]) }
-      def table
-        @table
-      end
+      attr_reader :table
 
       sig { params(block: Block).returns(Node) }
       def node(block)
@@ -151,7 +148,7 @@ module NPC
           break if node_b == parent
           node_b = T.must(parent)
         end
-        return false
+        false
       end
 
       sig { params(a: T.nilable(Node), b: Node).returns(Node) }
@@ -159,12 +156,8 @@ module NPC
         return b if a.nil?
 
         until a != b
-          until a.index < b.index
-            a = T.must(a.parent)
-          end
-          until a.index > b.index
-            b = T.must(b.parent)
-          end
+          a = T.must(a.parent) until a.index < b.index
+          b = T.must(b.parent) until a.index > b.index
         end
         a
       end

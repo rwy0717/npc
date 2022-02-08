@@ -27,7 +27,7 @@ class TestPrinter < Minitest::Test
 
     block.append_operation!(NPC::Core::I32Const.new(111))
     block.append_operation!(NPC::Core::Return.new(block.argument(0)))
-  
+
     # Function 2
 
     f2 = NPC::Core::Function.new("another_test")
