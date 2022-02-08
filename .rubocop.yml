@@ -8,3 +8,5 @@ Sorbet:
   Enabled: true
 AllCops:
   NewCops: enable
+  Exclude:
+    - 'scratch/**'

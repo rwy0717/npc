@@ -25,7 +25,6 @@ module BF
       mod.body_block.append_operation!(fun)
       stack = []
       b = NPC::Builder.at_back(fun.body_region.first_block!)
-      fun = b.insert!(NPC::Core::Function.new("main"))
       i = 0
 
       while i < prog.length

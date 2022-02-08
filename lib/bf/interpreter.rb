@@ -53,23 +53,23 @@ module BF
     prop :istr_index, Integer, default: 0
 
     sig { params(index: Integer).returns(Integer) }
-    def get_data_at(index)
+    def load_data_at(index)
       data[index] || 0
     end
 
     sig { params(index: Integer, value: Integer).void }
-    def set_data_at(index, value)
+    def store_data_at(index, value)
       data[index] = value
     end
 
     sig { returns(Integer) }
-    def get_data
-      get_data_at(data_index)
+    def load_data
+      store_data_at(data_index)
     end
 
     sig { params(value: Integer).void }
-    def set_data(value)
-      set_data_at(data_index, value)
+    def store_data(value)
+      store_data_at(data_index, value)
     end
 
     sig { void }
@@ -84,28 +84,28 @@ module BF
 
     sig { void }
     def increment
-      set_data(get_data + 1)
+      store_data(load_data + 1)
     end
 
     sig { void }
     def decrement
-      set_data(get_data - 1)
+      store_data(load_data - 1)
     end
 
     sig { void }
     def output
-      ostr << get_data
+      ostr << load_data
     end
 
     sig { void }
     def input
-      set_data(@istr[@istr_index] || 0)
+      store_data(@istr[@istr_index] || 0)
       @istr_index += 1
     end
 
     sig { void }
     def jump_forward_if_zero
-      return unless get_data == 0
+      return unless load_data == 0
 
       depth = 1
       until depth == 0
@@ -120,7 +120,7 @@ module BF
 
     sig { void }
     def jump_backward_if_nonzero
-      return unless get_data != 0
+      return unless load_data != 0
 
       depth = 1
       until depth == 0

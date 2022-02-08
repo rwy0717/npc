@@ -23,7 +23,7 @@ class TestPrinter < Minitest::Test
 
     block = NPC::Block.new([NPC::Core::I32, NPC::Core::I32])
     f.region(0).append_block!(block)
-    g = b1.insert!(NPC::Core::Goto.new(block, [y.result, z.result]))
+    b1.insert!(NPC::Core::Goto.new(block, [y.result, z.result]))
 
     block.append_operation!(NPC::Core::I32Const.new(111))
     block.append_operation!(NPC::Core::Return.new(block.argument(0)))
