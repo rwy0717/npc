@@ -1,4 +1,5 @@
 # NPC: A Compiler Framework in Ruby
+[![Ruby](https://github.com/rwy0717/npc/actions/workflows/ruby.yml/badge.svg)](https://github.com/rwy0717/npc/actions/workflows/ruby.yml)
 
 NPC is a generic high-level framework for writing compilers, heavily (heavily!) based on MLIR in the LLVM-Project.
 
