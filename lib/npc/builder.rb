@@ -37,9 +37,10 @@ module NPC
       end
 
       # Insert before the terminator of a block.
+      # If the last operation is not a terminator, insert at the end.
       sig { params(block: Block).returns(Builder) }
       def before_terminator(block)
-        Builder.new(T.must(block.terminator))
+        Builder.new(block.before_terminator)
       end
     end
 
@@ -54,7 +55,7 @@ module NPC
     end
 
     sig { params(point: OperationLink).void }
-    def set_insertion_point!(point)
+    def insertion_point=(point)
       @point = point
     end
 

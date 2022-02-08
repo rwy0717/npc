@@ -38,11 +38,39 @@ NPC uses sorbet for type-checking. Sorbet should be run with the option:
 This option can be placed in the file `sorbet/config`, to ensure
 sorbet is always run with it.
 
-## Development
+## Developing NPC
+
+The basics:
 
 ```
 git clone https://github.com/rwy0717/npc
 cd npc
 bundle install
 bundle exec rake test
+```
+
+### Other Tasks
+#### Opening a Console
+```
+./bin/console
+```
+
+Console is a script that loads dependencies and imports the NPC namespace.
+
+#### Typechecking with Sorbet
+
+```
+bundle exec srb
+```
+
+#### Autoformatting with Rubocop
+
+```
+bundle exec rubocop -a
+```
+
+#### Run a specific Test
+
+```
+bundle exec rake test TEST=./test/npc/test_printer.rb
 ```

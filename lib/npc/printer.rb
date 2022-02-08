@@ -62,8 +62,8 @@ module NPC
   class NameTable < T::Struct
     extend T::Sig
 
-    const :value_names, T::Hash[Value, String], factory: -> { {} }
-    const :block_names, T::Hash[Block, String], factory: -> { {} }
+    const :value_names,  T::Hash[Value, String], factory: -> { {} }
+    const :block_names,  T::Hash[Block, String], factory: -> { {} }
     const :region_names, T::Hash[Region, String], factory: -> { {} }
 
     sig { params(value: Value).returns(String) }

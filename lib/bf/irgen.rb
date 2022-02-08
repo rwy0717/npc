@@ -45,9 +45,9 @@ module BF
         when "["
           stack.push(b.insertion_point)
           op = b.insert!(IR::Loop.new)
-          b.set_insertion_point!(op.body_region.first_block!.back)
+          b.insertion_point = op.body_region.first_block!.back
         when "]"
-          b.set_insertion_point!(stack.pop)
+          b.insertion_point = stack.pop
         end
         i += 1
       end

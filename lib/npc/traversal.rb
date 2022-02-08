@@ -4,7 +4,8 @@
 # @file External iterators for walking IR trees.
 
 module NPC
-  class PostOrderBlockSuccessorsIterator
+  # Iterate blocks in post-order.
+  class PostOrderIter
     class Frame < T::Struct
       const :block, Block
       const :iterator, ArrayIterator[Block]
@@ -101,6 +102,27 @@ module NPC
         block: block,
         iterator: ArrayIterator.new(block.successors),
       )
+    end
+  end
+
+  class PostOrder
+    extend T::Sig
+    extend T::Generic
+    include Enumerable
+
+    Elem = type_member(fixed: Block)
+
+    sig { params(block: Block).void }
+    def initialize(block)
+      @block = T.let(block, Block)
+    end
+
+    sig { override.params(proc: T.proc.params(arg0: Block).returns(BasicObject)).returns(T.self_type) }
+    def each(&proc)
+      PostOrderIter.new(@block).each! do |block|
+        proc.call(block)
+      end
+      self
     end
   end
 end

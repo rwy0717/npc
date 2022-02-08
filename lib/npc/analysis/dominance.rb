@@ -19,7 +19,7 @@ module NPC
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
       def dominates(a, b)
         raise "operation not in block" unless a.parent_block == @block && b.parent_block == @block
-        @index_table.fetch(a) > index_table.fetch(b)
+        @index_table.fetch(a) > @index_table.fetch(b)
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
@@ -33,9 +33,9 @@ module NPC
 
       sig { params(region: Region).void }
       def initialize(region)
-        @region = T.let(region, Region)
+        @region           = T.let(region, Region)
         @block_info_table = T.let({}, T::Hash[Block, BlockInfo])
-        @dom_tree = T.let(nil, T.nilable(DominatorTree))
+        @dominator_tree   = T.let(nil, T.nilable(DominatorTree))
       end
 
       sig { params(block: Block).returns(BlockInfo) }
@@ -45,8 +45,8 @@ module NPC
       end
 
       sig { returns(DominatorTree) }
-      def dom_tree
-        @dom_tree ||= DomTree.new(@region)
+      def dominator_tree
+        @dominator_tree ||= DominatorTree.new(@region)
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
@@ -54,19 +54,119 @@ module NPC
         block_a = a.parent_block!
         block_b = b.parent_block!
         if block_a == block_b
-          return block_info(block_a).dominates(a, b)
+          block_info(block_a).dominates(a, b)
+        else
+          block_dominates(block_a, block_b)
         end
-        block_dominates(block_a, block_b)
       end
 
       sig { params(a: Block, b: Block).returns(T::Boolean) }
       def block_dominates(a, b)
-        true
+        dominator_tree.dominates(a, b)
+      end
+    end
+
+    # Information about when a block dominates another in a given region
+    class DominatorTree
+
+      class Node < T::Struct
+        extend T::Sig
+
+        prop :block, Block
+        prop :index, Integer
+        # the immediate dominator. Also called an idom.
+        prop :parent, T.nilable(Node)
+
+        sig { returns(String) }
+        def inspect
+          "<Node:#{object_id}: block=#{block.object_id}, index=#{index}, parent=#{parent.object_id}>"
+        end
+      end
+
+      extend T::Sig
+
+      sig { params(region: Region).void }
+      def initialize(region)
+        @table = T.let({}, T::Hash[Block, Node])
+
+        first_block = region.first_block
+        return unless first_block
+
+        # create a list of all the tree nodes
+
+        nodes = []
+
+        PostOrder.new(first_block).each_with_index do |block, index|
+          node = Node.new(block: block, index: index)
+          nodes << node
+          @table[block] = node
+        end
+
+        # The entry node dominates itself, has no proper dominators.
+        first_node = nodes.pop
+        first_node.parent = first_node
+
+        changed = T.let(true, T::Boolean)
+        while changed
+          changed = false
+
+          nodes.reverse.each do |node|
+            block    = node.block
+            new_idom = T.let(nil, T.nilable(Node))
+
+            block.predecessors.each do |pred|
+              pred_node = @table.fetch(pred)
+              if pred_node.parent
+                new_idom = intersect(new_idom, pred_node)
+              end
+            end
+
+            if node.parent != new_idom
+              node.parent = new_idom
+              changed = true
+            end
+          end
+        end
+      end
+
+      sig { returns(T::Hash[Block, Node]) }
+      def table
+        @table
+      end
+
+      sig { params(block: Block).returns(Node) }
+      def node(block)
+        table.fetch(block)
       end
 
       sig { params(a: Block, b: Block).returns(T::Boolean) }
-      def block_dominates(a, b)
-        dom_tree.block_dominates(a, b)
+      def dominates(a, b)
+        node_a = @table.fetch(a)
+        node_b = @table.fetch(b)
+        loop do
+          return true if node_a == node_b
+          parent = node_b.parent
+          # The entry node is dominated by itself, so break if
+          # we get that far.
+          break if node_b == parent
+          node_b = T.must(parent)
+        end
+        return false
+      end
+
+      sig { params(a: T.nilable(Node), b: Node).returns(Node) }
+      def intersect(a, b)
+        return b if a.nil?
+
+        until a != b
+          until a.index < b.index
+            a = T.must(a.parent)
+          end
+          until a.index > b.index
+            b = T.must(b.parent)
+          end
+        end
+        a
       end
     end
 
@@ -83,6 +183,8 @@ module NPC
     end
 
     # Get the highest ancestor of operation that is still a descendent of region.
+    # Nil if the operation is not a descendent of the region.
+    # If the operation is located directly under the region, returns the operation.
     sig { params(operation: Operation, target: Region).returns(T.nilable(Operation)) }
     def ancestor_in_region(operation, target)
       loop do
@@ -98,8 +200,9 @@ module NPC
       loop do
         region = block.parent_region!
         return block if region == target
-        block = region.parent_block
-        return nil if block.nil?
+        b = region.parent_block
+        return nil if b.nil?
+        block = b
       end
     end
 
@@ -151,7 +254,8 @@ module NPC
     def value_dominates(value, operation)
       case value
       when Argument
-        value.owning_block.ancestor_of(operation)
+        raise "todo"
+        # value.owning_block.ancestor_of(operation)
       when Result
         dominates(value.owning_operation, operation, strict: true)
       else

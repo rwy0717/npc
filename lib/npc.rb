@@ -47,6 +47,10 @@ require("npc/uses")
 require("npc/value")
 require("npc/one_region")
 
+# Analysis
+
+require("npc/analysis")
+
 # IR Dialects
 
 require("npc/core")
