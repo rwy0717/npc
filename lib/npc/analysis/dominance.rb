@@ -155,9 +155,9 @@ module NPC
       def intersect(a, b)
         return b if a.nil?
 
-        until a != b
-          a = T.must(a.parent) until a.index < b.index
-          b = T.must(b.parent) until a.index > b.index
+        until a == b
+          a = T.must(a.parent) while a.index < b.index
+          b = T.must(b.parent) while a.index > b.index
         end
         a
       end
