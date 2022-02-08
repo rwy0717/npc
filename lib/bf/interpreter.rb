@@ -64,7 +64,7 @@ module BF
 
     sig { returns(Integer) }
     def load_data
-      store_data_at(data_index)
+      load_data_at(data_index)
     end
 
     sig { params(value: Integer).void }
