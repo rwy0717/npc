@@ -45,7 +45,6 @@ class TestDominatorTree < MiniTest::Test
     assert_equal(0,  n1.index)
   end
 
-  focus
   sig { void }
   def test_diamond_cfg
     m = NPC::Core::Module.new("example")
@@ -65,19 +64,12 @@ class TestDominatorTree < MiniTest::Test
     b1.append_operation!(NPC::Core::Goto.new(b3))
     b2.append_operation!(NPC::Core::Goto.new(b3))
 
-    NPC::Printer.print_operation(m)
-
     tree = NPC::Dominance::DominatorTree.new(r)
 
     n0 = tree.node(b0)
     n1 = tree.node(b1)
     n2 = tree.node(b2)
     n3 = tree.node(b3)
-
-    p(n0)
-    p(n1)
-    p(n2)
-    p(n3)
 
     assert_equal(n0, n0.parent)
     assert_equal(b0, n0.block)
@@ -99,8 +91,4 @@ end
 
 class TestDominance < MiniTest::Test
   extend T::Sig
-
-  sig { void }
-  def test_simple
-  end
 end
