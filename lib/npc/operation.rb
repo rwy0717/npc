@@ -1,7 +1,6 @@
 # typed: false
 # frozen_string_literal: true
 
-require("npc/base")
 require("npc/located")
 require("npc/operand")
 require("npc/result")
@@ -37,9 +36,7 @@ module NPC
   module OperationLink
     extend T::Sig
     extend T::Helpers
-
     include Kernel
-
     abstract!
 
     sig { abstract.returns(T.nilable(Block)) }
@@ -113,12 +110,24 @@ module NPC
       x if x.is_a?(Operation)
     end
 
+    sig { returns(Operation) }
+    def prev_operation!
+      T.must(prev_operation)
+    end
+
     # Get the next operation in the block.
     # Nil if this operation is not in a block, or if this is the last operation in the block.
     sig { returns(T.nilable(Operation)) }
     def next_operation
       x = next_link
       x if x.is_a?(Operation)
+    end
+
+    # Get the next operation in the block.
+    # Nil if this operation is not in a block, or if this is the last operation in the block.
+    sig { returns(Operation) }
+    def next_operation!
+      T.must(next_operation)
     end
   end
 
@@ -362,6 +371,11 @@ module NPC
       attributes.key?(key)
     end
 
+    sig { params(key: Symbol, val: T.untyped).void }
+    def set_attribute!(key, val)
+      attributes[key] = val
+    end
+
     # @!group Block Operands / Successor Regions
 
     # The underlying block-operands array of this op.
@@ -460,12 +474,12 @@ module NPC
     sig { returns(T.self_type) }
     def remove_from_block!
       raise "operation not in block" unless
-        @parent && @prev_link && @next_link
+        @parent_block && @prev_link && @next_link
 
       @prev_link.next_link = @next_link
       @next_link.prev_link = @prev_link
 
-      @parent = nil
+      @parent_block = nil
       @prev_link = nil
       @next_link = nil
 

@@ -18,7 +18,9 @@ module NPC
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
       def dominates(a, b)
-        raise "operation not in block" unless a.parent_block == @block && b.parent_block == @block
+        raise "operation not in block" if
+          a.parent_block != @block || b.parent_block != @block
+
         @index_table.fetch(a) > @index_table.fetch(b)
       end
 
@@ -151,6 +153,8 @@ module NPC
         false
       end
 
+      # Find the nearest common ancestor of two nodes in the dominance tree.
+      # This is their common dominator.
       sig { params(a: T.nilable(Node), b: Node).returns(Node) }
       def intersect(a, b)
         return b if a.nil?

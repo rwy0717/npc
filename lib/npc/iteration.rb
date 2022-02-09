@@ -16,7 +16,7 @@ module NPC
     abstract!
 
     #
-    # Base Interface--to be defined by users.
+    # Base Interface--to be defined by implementers.
     #
 
     sig { abstract.returns(T::Boolean) }

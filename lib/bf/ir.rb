@@ -21,17 +21,76 @@ module BF
       attr_reader :body
     end
 
-    class Inc < NPC::Operation; end
+    module AmountAttribute
+      extend T::Sig
+      include NPC::OperationTrait
 
-    class Dec < NPC::Operation; end
+      sig { returns(Integer) }
+      def amount
+        T.cast(attribute(:amount), T.nilable(Integer)) || 1
+      end
 
-    class MoveL < NPC::Operation; end
+      sig { params(val: Integer).void }
+      def amount=(val)
+        set_attribute!(:amount, val)
+      end
+    end
 
-    class MoveR < NPC::Operation; end
+    class Inc < NPC::Operation
+      extend T::Sig
+      include AmountAttribute
 
-    class LoopL < NPC::Operation; end
+      sig { params(amount: Integer).void }
+      def initialize(amount = 1)
+        super(
+          attributes: {
+            amount: amount,
+          }
+        )
+      end
+    end
 
-    class LoopR < NPC::Operation; end
+    class Dec < NPC::Operation
+      extend T::Sig
+      include AmountAttribute
+
+      sig { params(amount: Integer).void }
+      def initialize(amount = 1)
+        super(
+          attributes: {
+            amount: amount,
+          }
+        )
+      end
+    end
+
+    class MoveL < NPC::Operation
+      extend T::Sig
+      include AmountAttribute
+
+      sig { params(amount: Integer).void }
+      def initialize(amount = 1)
+        super(
+          attributes: {
+            amount: amount,
+          }
+        )
+      end
+    end
+
+    class MoveR < NPC::Operation
+      extend T::Sig
+      include AmountAttribute
+
+      sig { params(amount: Integer).void }
+      def initialize(amount = 1)
+        super(
+          attributes: {
+            amount: amount,
+          }
+        )
+      end
+    end
 
     class Print < NPC::Operation; end
 
@@ -44,8 +103,15 @@ module BF
       sig { void }
       def initialize
         super(
-          operands
+          regions: 1
         )
+
+        region(0).append_block!(NPC::Block.new)
+      end
+
+      sig { returns(NPC::Block) }
+      def body
+        region(0).first_block!
       end
     end
 

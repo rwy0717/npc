@@ -1,7 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require("npc/base")
 require("npc/type")
 
 # require("npc/operation")

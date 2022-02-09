@@ -22,13 +22,10 @@ end
 # Base Library
 
 require("npc/argument")
-require("npc/base")
-require("npc/block_sentinel")
 require("npc/block")
 require("npc/builder")
 require("npc/foldable")
 require("npc/function_type")
-require("npc/in_block")
 require("npc/iteration")
 require("npc/located")
 require("npc/location")

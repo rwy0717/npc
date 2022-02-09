@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require("npc/argument")
-require("npc/base")
 require("npc/operation")
 require("npc/block_operand")
 
@@ -396,10 +395,20 @@ module NPC
       @sentinel.next_operation
     end
 
+    sig { returns(Operation) }
+    def first_operation!
+      @sentinel.next_operation!
+    end
+
     ## The last operation in this block. Nil if this block is empty.
     sig { returns(T.nilable(Operation)) }
     def last_operation
       @sentinel.prev_operation
+    end
+
+    sig { returns(Operation) }
+    def last_operation!
+      @sentinel.prev_operation!
     end
 
     ## The operation that terminates this block

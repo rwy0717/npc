@@ -11,65 +11,122 @@ Bundler.setup(
   :test,
 )
 
+require("pry")
 require "npc"
 require "bf"
 require "optparse"
 
-command = :unknown
-output_filename = nil
+extend T::Sig
 
-parser = OptionParser.new do |opts|
-  opts.banner = "Usage: bfc [option...] <input>"
-  opts.on("-v", "--[no-]verbose", "Run verbosely") do
-    command = :version
-  end
-  opts.on("-h", "--help", "Print help") do
-    command = :help
-  end
-  opts.on("-d", "--dump", "Dump the IR of the input program") do
-    command = :dump
-  end
-  opts.on("-i", "--interpret", "Interpret the input program") do
-    command = :interpret
-  end
-  opts.on("-o", "--out=FILE", String, "Specify Output file") do |s|
-    output_filename = s
-  end
+#
+# Option Parsing
+#
+
+class Options < T::Struct
+  prop :command, Symbol, default: :unknown
+  prop :output_filename, T.nilable(String), default: nil
+  prop :passes, T::Array[String], factory: -> { [] }
 end
 
-def help
-  puts parser
-end
+#
+# Commands
+#
 
-def version
+# sig { params(_options: Options).void }
+# def help(_options)
+#   puts parser
+#   exit(0)
+# end
+
+sig { params(_options: Options).void }
+def version(_options)
   puts VERSION
+  exit(0)
 end
 
-def interpret
+sig { params(_options: Options).void }
+def interpret(_options)
   filename = ARGV.fetch(0)
   program = File.read(filename)
   puts BF::Interpreter.call_str(program)
+  exit(0)
 end
 
-def dump
+PASS_TABLE = T.let(
+  {
+    "simplify" => BF::SimplifyRepetitions.new,
+  },
+  T::Hash[String, T.untyped]
+)
+
+sig { params(options: Options).void }
+def dump(options)
   filename = ARGV.fetch(0)
   program = File.read(filename)
   ir = BF::IRGen.run(program)
+
   NPC::Printer.print_operation(ir)
+
+  options.passes.each do |pass_name|
+    pass = PASS_TABLE[pass_name]
+    raise "unknown pass #{pass_name}" unless pass
+    print("====#{pass_name}====\n")
+    NPC::Printer.print_operation(ir)
+    pass.run(ir)
+  end
+
+  exit(0)
 end
 
-parser.parse!
+#
+# Main
+#
 
-case command
-when :help
-  help
-when :version
-  version
-when :interpret
-  interpret
-when :dump
-  dump
-else
-  help
-  exit(1)
+sig { void }
+def main
+  options = Options.new
+  parser = OptionParser.new do |opts|
+    opts.banner = "Usage: bfc [option...] <input>"
+    opts.on("-v", "--[no-]verbose", "Run verbosely") do
+      options.command = :version
+    end
+    opts.on("-h", "--help", "Print help") do
+      options.command = :help
+    end
+    opts.on("-d", "--dump", "Dump the IR of the input program") do
+      options.command = :dump
+    end
+    opts.on("-i", "--interpret", "Interpret the input program") do
+      options.command = :interpret
+    end
+    opts.on("-o", "--out=FILE", String, "Specify Output file") do |s|
+      options.output_filename = s
+    end
+    opts.on("-p", "--pass=PASS", String, "Perform a pass") do |pass|
+      options.passes << pass
+    end
+  end
+
+  parser.parse!
+
+  case options.command
+  when :help
+    puts parser
+  when :version
+    version(options)
+  when :interpret
+    interpret(options)
+  when :dump
+    dump(options)
+  else
+    # help(options)
+    puts parser
+    exit(1)
+  end
 end
+
+#
+# Run
+#
+
+main

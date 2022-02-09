@@ -7,6 +7,4 @@ require("npc")
 require("bf/compiler")
 require("bf/interpreter")
 require("bf/irgen")
-
-# require("bf/lang_set")
-# include("bf/pass_set")
+require("bf/transformations/simplify_repetitions")

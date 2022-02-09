@@ -1,8 +1,6 @@
 # typed: strict
 # frozen_string_literal: true
 
-require "npc/base"
-
 module NPC
   module Location
     extend T::Sig

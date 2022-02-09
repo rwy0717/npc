@@ -1,6 +1,8 @@
 # typed: true
 # frozen_string_literal: true
 
+# https://webassembly.github.io/spec/core/syntax/instructions.html
+
 module WASM
   class ModuleWriter
     extend T::Sig
@@ -16,7 +18,7 @@ module WASM
     end
 
     ## Introduce a function type into the module, getting back it's type-index.
-    ## This is a convinience function that takes two arrays of types, rather than a complete FuncType.
+    ## This is a convenience function that takes two arrays of types, rather than a complete FuncType.
     sig do
       params(
         args: T.any(Symbol, T::Array[Symbol]),
