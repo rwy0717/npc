@@ -2,7 +2,111 @@
 # frozen_string_literal: true
 
 module NPC
+  # Information about when a block dominates another in a given region
+  class DominatorTree
+    class Node < T::Struct
+      extend T::Sig
+
+      prop :block, Block
+      prop :index, Integer
+      # the immediate dominator. Also called an idom.
+      prop :parent, T.nilable(Node)
+
+      sig { returns(String) }
+      def inspect
+        "<Node:#{object_id}: block=#{block.object_id}, index=#{index}, parent=#{parent.object_id}>"
+      end
+    end
+
+    extend T::Sig
+
+    sig { params(region: Region).void }
+    def initialize(region)
+      @table = T.let({}, T::Hash[Block, Node])
+
+      first_block = region.first_block
+      return unless first_block
+
+      # create a list of all the tree nodes
+
+      nodes = []
+
+      PostOrder.new(first_block).each_with_index do |block, index|
+        node = Node.new(block: block, index: index)
+        nodes << node
+        @table[block] = node
+      end
+
+      # The entry node dominates itself, has no proper dominators.
+      first_node = nodes.pop
+      first_node.parent = first_node
+
+      changed = T.let(true, T::Boolean)
+      while changed
+        changed = false
+
+        nodes.reverse.each do |node|
+          block    = node.block
+          new_idom = T.let(nil, T.nilable(Node))
+
+          block.predecessors.each do |pred|
+            pred_node = @table.fetch(pred)
+            if pred_node.parent
+              new_idom = intersect(new_idom, pred_node)
+            end
+          end
+
+          if node.parent != new_idom
+            node.parent = new_idom
+            changed = true
+          end
+        end
+      end
+    end
+
+    sig { returns(T::Hash[Block, Node]) }
+    attr_reader :table
+
+    sig { params(block: Block).returns(Node) }
+    def node(block)
+      table.fetch(block)
+    end
+
+    sig { params(a: Block, b: Block).returns(T::Boolean) }
+    def dominates(a, b)
+      node_a = @table.fetch(a)
+      node_b = @table.fetch(b)
+      loop do
+        return true if node_a == node_b
+        parent = node_b.parent
+        # The entry node is dominated by itself, so break if
+        # we get that far.
+        break if node_b == parent
+        node_b = T.must(parent)
+      end
+      false
+    end
+
+    # Find the nearest common ancestor of two nodes in the dominance tree.
+    # This is their common dominator.
+    sig { params(a: T.nilable(Node), b: Node).returns(Node) }
+    def intersect(a, b)
+      return b if a.nil?
+
+      until a == b
+        a = T.must(a.parent) while a.index < b.index
+        b = T.must(b.parent) while a.index > b.index
+      end
+      a
+    end
+  end
+
   class Dominance
+    # Dominance information about the operations in a block.
+    # Essentially, assigns indexes to the operations in a block.
+    # If two operations are in the same block, the operation with
+    # the lower index occurs earlier in the block, and thus dominates
+    #the later operation.
     class BlockInfo
       extend T::Sig
 
@@ -30,6 +134,12 @@ module NPC
       end
     end
 
+    # Dominance information for blocks in a region.
+    # If two operations are in different blocks,
+    # then we can look at the dominance of those blocks
+    # to determine dominance of the two operations.
+    # Dominance between blocks is represented as a tree,
+    # where each node points back at it's dominator.
     class RegionInfo
       extend T::Sig
 
@@ -65,105 +175,6 @@ module NPC
       sig { params(a: Block, b: Block).returns(T::Boolean) }
       def block_dominates(a, b)
         dominator_tree.dominates(a, b)
-      end
-    end
-
-    # Information about when a block dominates another in a given region
-    class DominatorTree
-      class Node < T::Struct
-        extend T::Sig
-
-        prop :block, Block
-        prop :index, Integer
-        # the immediate dominator. Also called an idom.
-        prop :parent, T.nilable(Node)
-
-        sig { returns(String) }
-        def inspect
-          "<Node:#{object_id}: block=#{block.object_id}, index=#{index}, parent=#{parent.object_id}>"
-        end
-      end
-
-      extend T::Sig
-
-      sig { params(region: Region).void }
-      def initialize(region)
-        @table = T.let({}, T::Hash[Block, Node])
-
-        first_block = region.first_block
-        return unless first_block
-
-        # create a list of all the tree nodes
-
-        nodes = []
-
-        PostOrder.new(first_block).each_with_index do |block, index|
-          node = Node.new(block: block, index: index)
-          nodes << node
-          @table[block] = node
-        end
-
-        # The entry node dominates itself, has no proper dominators.
-        first_node = nodes.pop
-        first_node.parent = first_node
-
-        changed = T.let(true, T::Boolean)
-        while changed
-          changed = false
-
-          nodes.reverse.each do |node|
-            block    = node.block
-            new_idom = T.let(nil, T.nilable(Node))
-
-            block.predecessors.each do |pred|
-              pred_node = @table.fetch(pred)
-              if pred_node.parent
-                new_idom = intersect(new_idom, pred_node)
-              end
-            end
-
-            if node.parent != new_idom
-              node.parent = new_idom
-              changed = true
-            end
-          end
-        end
-      end
-
-      sig { returns(T::Hash[Block, Node]) }
-      attr_reader :table
-
-      sig { params(block: Block).returns(Node) }
-      def node(block)
-        table.fetch(block)
-      end
-
-      sig { params(a: Block, b: Block).returns(T::Boolean) }
-      def dominates(a, b)
-        node_a = @table.fetch(a)
-        node_b = @table.fetch(b)
-        loop do
-          return true if node_a == node_b
-          parent = node_b.parent
-          # The entry node is dominated by itself, so break if
-          # we get that far.
-          break if node_b == parent
-          node_b = T.must(parent)
-        end
-        false
-      end
-
-      # Find the nearest common ancestor of two nodes in the dominance tree.
-      # This is their common dominator.
-      sig { params(a: T.nilable(Node), b: Node).returns(Node) }
-      def intersect(a, b)
-        return b if a.nil?
-
-        until a == b
-          a = T.must(a.parent) while a.index < b.index
-          b = T.must(b.parent) while a.index > b.index
-        end
-        a
       end
     end
 
@@ -260,4 +271,65 @@ module NPC
       end
     end
   end
+
+  class DominanceError < T::Struct
+    extend T::Sig
+
+    const :operand, Operand
+
+    # sig { returns(String) }
+    # def message
+    #   user  = operand.owning_operation
+    #   value = operand.get
+
+    #   "operation #{operand.owning_operation."
+  end
+
+  class DominanceVerifier
+    extend T::Sig
+
+    sig { params(root: Operation).returns(T::Array[DominanceError]) }
+    def call(root)
+      validate_operation(root, Dominance.new)
+    end
+    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    def validate_operation(operation, dominance)
+      errors = validate_operands(operation, dominance)
+      return errors if errors.any?
+      validate_regions(operation, dominance)
+    end
+
+    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    def validate_operands(operation, dominance)
+      operation.operands.each do |operand|
+        value = operand.get!
+        unless dominance.value_dominates(value, operation)
+          return [DominanceError.new(operand: operand)]
+        end
+      end
+      []
+    end
+
+    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    def validate_regions(operation, dominance)
+      operation.regions.each do |region|
+        errors = validate_region(region, dominance)
+        return errors if errors.any?
+      end
+      []
+    end
+
+    sig { params(region: Region, dominance: Dominance).returns(T::Array[DominanceError]) }
+    def validate_region(region, dominance)
+      region.blocks.each do |block|
+        block.operations.each do |operation|
+          errors = validate_operation(operation, dominance)
+          return errors if errors.any?
+        end
+      end
+      []
+    end
+  end
+
+  VerifyDominance = T.let(DominanceVerifier.new, DominanceVerifier)
 end

@@ -11,7 +11,7 @@ class TestDominatorTree < MiniTest::Test
     m = NPC::Core::Module.new("example")
     b = m.region(0).first_block!
 
-    tree = NPC::Dominance::DominatorTree.new(m.region(0))
+    tree = NPC::DominatorTree.new(m.region(0))
     n = tree.node(b)
 
     assert_equal(n, n.parent)
@@ -31,7 +31,7 @@ class TestDominatorTree < MiniTest::Test
 
     b0.append_operation!(NPC::Core::Goto.new(b1))
 
-    tree = NPC::Dominance::DominatorTree.new(r)
+    tree = NPC::DominatorTree.new(r)
 
     n0 = tree.node(b0)
     n1 = tree.node(b1)
@@ -64,7 +64,7 @@ class TestDominatorTree < MiniTest::Test
     b1.append_operation!(NPC::Core::Goto.new(b3))
     b2.append_operation!(NPC::Core::Goto.new(b3))
 
-    tree = NPC::Dominance::DominatorTree.new(r)
+    tree = NPC::DominatorTree.new(r)
 
     n0 = tree.node(b0)
     n1 = tree.node(b1)
