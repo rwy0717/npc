@@ -71,8 +71,8 @@ def dump(options)
     pass = PASS_TABLE[pass_name]
     raise "unknown pass #{pass_name}" unless pass
     print("====#{pass_name}====\n")
-    NPC::Printer.print_operation(ir)
     pass.run(ir)
+    NPC::Printer.print_operation(ir)
   end
 
   exit(0)

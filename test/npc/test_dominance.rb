@@ -17,6 +17,10 @@ class TestDominatorTree < MiniTest::Test
     assert_equal(n, n.parent)
     assert_equal(b, n.block)
     assert_equal(0, n.index)
+
+    e = NPC::VerifiyDominance.call(m)
+    p e
+    assert_equal([], e)
   end
 
   sig { void }
