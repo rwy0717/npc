@@ -238,42 +238,6 @@ module NPC
       end
     end
 
-    ### Uses.
-
-    sig { returns(T.nilable(BlockOperand)) }
-    attr_accessor :first_use
-
-    sig { returns(T::Boolean) }
-    def unused?
-      @first_use.nil?
-    end
-
-    sig { returns(T::Boolean) }
-    def used?
-      @first_use != nil
-    end
-
-    sig { returns(T::Boolean) }
-    def used_once?
-      if @first_use
-        @first_use.next_use.nil?
-      else
-        false
-      end
-    end
-
-    # An enumerable of the BlockOperands that use this Block.
-    sig { returns(BlockUses) }
-    def uses
-      BlockUses.new(@first_use)
-    end
-
-    # An Enumerable of the Operations that use this Block as a BlockOperand.
-    sig { returns(BlockUsers) }
-    def users
-      BlockUsers.new(@first_use)
-    end
-
     ### Accessing the region that this block is a member of.
 
     ## Get the region that this block is a member of. Nil if this block is disconnected.
@@ -287,7 +251,7 @@ module NPC
 
     ## Get the region that this block is a member of. Throws if this block is disconnected.
     sig { returns(Region) }
-    def region!
+    def parent_region!
       T.must(@parent_region)
     end
 
@@ -316,7 +280,7 @@ module NPC
     end
 
     ## Remove this block from it's region.
-    sig { void }
+    sig { returns(T.self_type) }
     def remove_from_region!
       raise "block not in region" unless
         @parent_region && @prev_link && @next_link
@@ -327,6 +291,8 @@ module NPC
       @parent_region = nil
       @prev_link = nil
       @next_link = nil
+
+      self
     end
 
     ## Move this block to a new region.
@@ -457,12 +423,69 @@ module NPC
       self
     end
 
-    ### Predecessor and Sucessor Blocks
+    #
+    # Uses
+    #
 
-    # Any uses of this
+    sig { returns(T.nilable(BlockOperand)) }
+    attr_accessor :first_use
+
+    sig { returns(T::Boolean) }
+    def unused?
+      @first_use.nil?
+    end
+
+    sig { returns(T::Boolean) }
+    def used?
+      @first_use != nil
+    end
+
+    sig { returns(T::Boolean) }
+    def used_once?
+      if @first_use
+        @first_use.next_use.nil?
+      else
+        false
+      end
+    end
+
+    # An enumerable of the BlockOperands that use this Block.
+    sig { returns(BlockUses) }
+    def uses
+      BlockUses.new(@first_use)
+    end
+
+    # An Enumerable of the Operations that use this Block as a BlockOperand.
+    sig { returns(BlockUsers) }
+    def users
+      BlockUsers.new(@first_use)
+    end
+
+    #
+    # Predecessor and Successor Blocks
+    #
+
+    # The blocks that branch to this block.
     sig { returns(T::Array[Block]) }
     def predecessors
-      uses.map { |use| use.owning_operation.parent_block }.compact.uniq
+      preds = []
+      use = T.let(@first_use, T.nilable(BlockOperand))
+      while use
+        block = use.owning_operation.parent_block
+        preds << block if block
+        use = use.next_use
+      end
+      preds
+    end
+
+    sig { returns(T::Boolean) }
+    def any_predecessors?
+      !@first_use.nil?
+    end
+
+    sig { returns(T::Boolean) }
+    def no_predecessors?
+      @first_use.nil?
     end
 
     # Get the successor-blocks (blocks that come after this, in execution order).
@@ -477,9 +500,32 @@ module NPC
       ArrayIterator.new(successors)
     end
 
+    sig { returns(T::Boolean) }
+    def any_successors?
+      t = terminator
+      return false unless t
+      t.block_operands.any?
+    end
+
+    sig { returns(T::Boolean) }
+    def no_successors?
+      t = terminator
+      return true unless t
+      t.block_operands.none?
+    end
+
+    #
+    # Printing
+    #
+
     sig { returns(String) }
     def inspect
       "<block:#{object_id}>"
+    end
+
+    sig { void }
+    def dump
+      Printer.print_block(self)
     end
   end
 end
