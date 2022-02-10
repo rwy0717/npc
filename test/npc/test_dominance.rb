@@ -18,9 +18,9 @@ class TestDominatorTree < MiniTest::Test
     assert_equal(b, n.block)
     assert_equal(0, n.index)
 
-    e = NPC::VerifiyDominance.call(m)
-    p e
-    assert_equal([], e)
+    e = NPC::VerifyDominance.call(m)
+    p(e)
+    assert_empty(e)
   end
 
   sig { void }
@@ -31,7 +31,7 @@ class TestDominatorTree < MiniTest::Test
     r = f.region(0)
 
     b0 = r.first_block!
-    b1 = r.append_block!(NPC::Block.new)
+    b1 = NPC::Block.new.insert_into_region!(r.back)
 
     b0.append_operation!(NPC::Core::Goto.new(b1))
 
@@ -57,9 +57,9 @@ class TestDominatorTree < MiniTest::Test
     r = f.region(0)
 
     b0 = r.first_block!
-    b1 = r.append_block!(NPC::Block.new)
-    b2 = r.append_block!(NPC::Block.new)
-    b3 = r.append_block!(NPC::Block.new)
+    b1 = NPC::Block.new.insert_into_region!(r.back)
+    b2 = NPC::Block.new.insert_into_region!(r.back)
+    b3 = NPC::Block.new.insert_into_region!(r.back)
 
     t = NPC::Core::BoolConst.new(true)
 
@@ -95,4 +95,116 @@ end
 
 class TestDominance < MiniTest::Test
   extend T::Sig
+end
+
+class TestDominanceVerifier < Minitest::Test
+  extend T::Sig
+
+  sig { void }
+  def test_valid_single_block
+    m = NPC::Core::Module.new("example")
+    f = NPC::Core::Function.new("test")
+      .insert_into_block!(m.region(0).first_block!.back)
+    r = f.region(0)
+
+    b0 = r.first_block!
+
+    x = NPC::Core::I32Const.new(123)
+    y = NPC::Core::I32Const.new(456)
+    z = NPC::Core::I32Add.new(x.result, y.result)
+
+    b0.append_operation!(x)
+    b0.append_operation!(y)
+    b0.append_operation!(z)
+
+    assert_empty(NPC::VerifyDominance.call(m))
+  end
+
+  sig { void }
+  def test_valid_diamond
+    m = NPC::Core::Module.new("example")
+    f = NPC::Core::Function.new("test")
+      .insert_into_block!(m.region(0).first_block!.back)
+    r = f.region(0)
+
+    b0 = r.first_block!
+    b1 = NPC::Block.new.insert_into_region!(r.back)
+    b2 = NPC::Block.new.insert_into_region!(r.back)
+    b3 = NPC::Block.new.insert_into_region!(r.back)
+
+    t = NPC::Core::BoolConst.new(true)
+    x = NPC::Core::I32Const.new(123)
+    y = NPC::Core::I32Const.new(456)
+
+    b0.append_operation!(t)
+    b0.append_operation!(x)
+    b0.append_operation!(y)
+    b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
+
+    b1.append_operation!(NPC::Core::Goto.new(b3))
+
+    b2.append_operation!(NPC::Core::Goto.new(b3))
+
+    b3.append_operation!(NPC::Core::I32Add.new(x.result, y.result))
+
+    m.dump
+    p(NPC::VerifyDominance.call(m))
+  end
+
+  sig { void }
+  def test_invalid_single_block
+    m = NPC::Core::Module.new("example")
+    f = NPC::Core::Function.new("test")
+      .insert_into_block!(m.region(0).first_block!.back)
+    r = f.region(0)
+
+    b0 = r.first_block!
+
+    x = NPC::Core::I32Const.new(123)
+    y = NPC::Core::I32Const.new(456)
+    z = NPC::Core::I32Add.new(x.result, y.result)
+
+    b0.append_operation!(z)
+    b0.append_operation!(x)
+    b0.append_operation!(y)
+
+    errors = NPC::VerifyDominance.call(m)
+    assert_equal(1, errors.length)
+    e = T.cast(errors.first, NPC::DominanceError)
+    assert_equal(z.operand(0), e.operand)
+  end
+
+  sig { void }
+  def test_invalid_diamond
+    m = NPC::Core::Module.new("example")
+    f = NPC::Core::Function.new("test")
+      .insert_into_block!(m.region(0).first_block!.back)
+    r = f.region(0)
+
+    b0 = r.first_block!
+    b1 = NPC::Block.new.insert_into_region!(r.back)
+    b2 = NPC::Block.new.insert_into_region!(r.back)
+    b3 = NPC::Block.new.insert_into_region!(r.back)
+
+    t = NPC::Core::BoolConst.new(true)
+    x = NPC::Core::I32Const.new(123)
+    y = NPC::Core::I32Const.new(456)
+
+    b0.append_operation!(t)
+    b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
+
+    b1.append_operation!(x)
+    b1.append_operation!(NPC::Core::Goto.new(b3))
+
+    b2.append_operation!(y)
+    b2.append_operation!(NPC::Core::Goto.new(b3))
+
+    z = NPC::Core::I32Add.new(x.result, y.result)
+    b3.append_operation!(z)
+
+    errors = NPC::VerifyDominance.call(m)
+    assert_equal(1, errors.length)
+    e = T.cast(errors.first, NPC::DominanceError)
+    assert_equal(z.operand(0), e.operand)
+  end
 end

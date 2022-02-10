@@ -42,6 +42,10 @@ require("npc/type")
 require("npc/users")
 require("npc/uses")
 require("npc/value")
+require("npc/verification")
+
+# Traits
+
 require("npc/one_region")
 
 # Analysis

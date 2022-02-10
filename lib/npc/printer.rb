@@ -66,10 +66,16 @@ module NPC
     const :block_names,  T::Hash[Block, String], factory: -> { {} }
     const :region_names, T::Hash[Region, String], factory: -> { {} }
 
+    prop :next_unknown_id, Integer, default: 0
+
     sig { params(value: Value).returns(String) }
     def value_name(value)
       name = value_names[value]
-      raise "unnamed value" unless name
+      return name if name
+
+      name = "?#{@next_unknown_id}"
+      value_names[value] = name
+      @next_unknown_id += 1
       name
     end
 
@@ -199,16 +205,23 @@ module NPC
         Printer.new(table, out: out).print_operation(operation)
       end
 
-      sig { params(block: Block, table: NameTable, out: IO).void }
+      sig { params(block: Block, table: NameTable, out: T.any(StringIO, IO)).void }
       def print_block(
         block,
         table: Namer.name_in_block(block),
         out: $stdout
       )
-        Printer.new(table, out: out).print_block(block)
+        Printer.new(table, out: out).print_block_inline(block)
       end
 
-      # sig { params(block: )}
+      sig { params(region: Region, table: NameTable, out: T.any(StringIO, IO)).void }
+      def print_region(
+        region,
+        table: Namer.name_in_region(region),
+        out: $stdout
+      )
+        Printer.new(table, out: out).print_region_inline(region)
+      end
     end
 
     INDENTATION = "  "
@@ -250,7 +263,7 @@ module NPC
       when 0 # do nothing
       when 1
         print(" ")
-        print_region_contents(operation.region(0))
+        print_region_inline(operation.region(0))
       else
         indent do
           print_regions(operation.regions)
@@ -384,9 +397,6 @@ module NPC
 
     sig { params(region: Region).returns(T.self_type) }
     def print_region_inline(region)
-      print("&")
-      print(table.region_name(region))
-      print(" ")
       print_region_contents(region)
       self
     end
@@ -394,8 +404,6 @@ module NPC
     sig { params(region: Region).returns(T.self_type) }
     def print_region_contents(region)
       # print the inner objects of the region, but not the label.
-      # binding.pry
-
       print("{")
 
       if region.empty?

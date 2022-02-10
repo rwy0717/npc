@@ -1,18 +1,19 @@
 # typed: strict
 # frozen_string_literal: true
 
-require("npc/operation_verifier")
-
 module NPC
   module OneRegion
     class << self
       extend T::Sig
       include OperationVerifier
 
-      sig { override.params(operation: Operation).returns(T::Boolean) }
+      sig { override.params(operation: Operation).returns(T::Array[VerificationError]) }
       def verify(operation)
-        return false unless operation.is_a?(OneRegion)
-        operation.regions.length == 1
+        if operation.regions.length == 1
+          success
+        else
+          failure("operation has more than one region")
+        end
       end
     end
 

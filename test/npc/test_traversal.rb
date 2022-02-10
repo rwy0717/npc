@@ -21,8 +21,8 @@ class TestPostOrderIter < MiniTest::Test
 
     r = f.region(0)
 
-    b0 = r.append_block!(NPC::Block.new)
-    b1 = r.append_block!(NPC::Block.new)
+    b0 = NPC::Block.new.insert_into_region!(r.back)
+    b1 = NPC::Block.new.insert_into_region!(r.back)
 
     b0.append_operation!(NPC::Core::Goto.new(b1))
 
@@ -38,9 +38,14 @@ class TestPostOrderIter < MiniTest::Test
     r = f.region(0)
 
     b0 = r.first_block!
-    b1 = r.append_block!(NPC::Block.new)
-    b2 = r.append_block!(NPC::Block.new)
-    b3 = r.append_block!(NPC::Block.new)
+    b1 = NPC::Block.new
+    r.append_block!(b1)
+
+    b2 = NPC::Block.new
+    r.append_block!(b2)
+
+    b3 = NPC::Block.new
+    r.append_block!(b3)
 
     t = NPC::Core::BoolConst.new(true)
 

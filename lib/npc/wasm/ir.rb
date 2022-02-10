@@ -78,6 +78,40 @@ module NPC
 
     Poison = T.let(PoisonType.new, PoisonType)
 
+    class IntType < Type
+      sig { params(width: Integer).void }
+      def initialize(width)
+        super()
+        @width = T.let(width, Integer)
+      end
+
+      sig { returns(Integer) }
+      attr_reader :width
+    end
+
+    class IntTypeTable
+      extend T::Sig
+
+      sig { void }
+      def initialize
+        @table = T.let({}, T::Hash[Integer, IntType])
+      end
+
+      sig { returns(T::Hash[Integer, IntType]) }
+      attr_reader :table
+
+      sig { params(width: Integer).returns(IntType) }
+      def [](width)
+        table[width] ||= IntType.new(width)
+      end
+    end
+
+    Int = T.let(IntTypeTable.new, IntTypeTable)
+    I8  = T.let(Int[8],  IntType)
+    I16 = T.let(Int[16], IntType)
+    I32 = T.let(Int[32], IntType)
+    I64 = T.let(Int[64], IntType)
+
     #
     # Core IR
     #

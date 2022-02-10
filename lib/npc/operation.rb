@@ -376,7 +376,7 @@ module NPC
       attributes[key] = val
     end
 
-    # @!group Block Operands / Successor Regions
+    # @!group Block Operands / Successor Blocks
 
     # The underlying block-operands array of this op.
     # Block-operands are the potential targets of branching control flow operations.
@@ -673,11 +673,12 @@ module NPC
       true
     end
 
-    sig { returns(String) }
-    def to_s
-      io = StringIO.new
-      Printer.print_operation(self, out: io)
-      io.string
+    sig { void }
+    def dump
+      # io = StringIO.new
+      # Printer.print_operation(self, out: io)
+      # io.string
+      Printer.print_operation(self)
     end
 
     sig { returns(String) }

@@ -5,10 +5,26 @@ module NPC
   module OperationVerifier
     extend T::Sig
     extend T::Helpers
+    include Kernel
 
     abstract!
 
-    sig { abstract.params(operation: Operation).returns(T::Boolean) }
+    sig { abstract.params(operation: Operation).returns(T::Array[VerificationError]) }
     def verify(operation); end
+
+    # Helper method for signifying success
+    sig { returns(T::Array[VerificationError]) }
+    def success
+      []
+    end
+
+    sig { params(message: String).returns(T::Array[VerificationError]) }
+    def failure(message)
+      [VerificationFailure.new(
+        caller:
+          caller_locations,
+        message: message
+      )]
+    end
   end
 end

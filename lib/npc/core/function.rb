@@ -47,17 +47,21 @@ module NPC
       # Add a new block to the end of the body region.
       sig { params(argument_types: T::Array[Type]).returns(Block) }
       def new_block!(argument_types = [])
-        append_block!(Block.new(argument_types))
+        b = Block.new(argument_types)
+        append_block!(b)
+        b
       end
 
-      sig { params(block: Block).returns(Block) }
+      sig { params(block: Block).returns(T.self_type) }
       def prepend_block!(block)
         body_region.prepend_block!(block)
+        self
       end
 
-      sig { params(block: Block).returns(Block) }
+      sig { params(block: Block).returns(T.self_type) }
       def append_block!(block)
         body_region.append_block!(block)
+        self
       end
     end
   end

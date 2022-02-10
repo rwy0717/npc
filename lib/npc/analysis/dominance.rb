@@ -106,7 +106,7 @@ module NPC
     # Essentially, assigns indexes to the operations in a block.
     # If two operations are in the same block, the operation with
     # the lower index occurs earlier in the block, and thus dominates
-    #the later operation.
+    # the later operation.
     class BlockInfo
       extend T::Sig
 
@@ -125,7 +125,7 @@ module NPC
         raise "operation not in block" if
           a.parent_block != @block || b.parent_block != @block
 
-        @index_table.fetch(a) > @index_table.fetch(b)
+        @index_table.fetch(a) < @index_table.fetch(b)
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
@@ -136,10 +136,14 @@ module NPC
 
     # Dominance information for blocks in a region.
     # If two operations are in different blocks,
-    # then we can look at the dominance of those blocks
+    # then we can look at the dominance of their blocks
     # to determine dominance of the two operations.
     # Dominance between blocks is represented as a tree,
     # where each node points back at it's dominator.
+    #
+    # RegionInfo is constructed lazily.
+    #
+    # see: DominatorTree
     class RegionInfo
       extend T::Sig
 
@@ -262,8 +266,7 @@ module NPC
     def value_dominates(value, operation)
       case value
       when Argument
-        raise "todo"
-        # value.owning_block.ancestor_of(operation)
+        block_dominates(value.owning_block, operation.parent_block!)
       when Result
         dominates(value.owning_operation, operation, strict: true)
       else
@@ -292,6 +295,7 @@ module NPC
     def call(root)
       validate_operation(root, Dominance.new)
     end
+
     sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
     def validate_operation(operation, dominance)
       errors = validate_operands(operation, dominance)
