@@ -1,0 +1,10 @@
+#!/bin/bash
+
+case $# in
+1)
+  bundle exec rake test TEST="$1"
+  ;;
+*)
+  bundle exec rake test "$@"
+  ;;
+esac
