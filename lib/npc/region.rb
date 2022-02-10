@@ -146,20 +146,21 @@ module NPC
     end
 
     ## Insert a block at the beginning of this region. Returns the inserted block.
-    sig { params(block: Block).returns(Block) }
+    sig { params(block: Block).returns(T.self_type) }
     def prepend_block!(block)
       block.insert_into_region!(front)
-      block
+      self
     end
 
     ## Insert a block into this region. Returns the inserted block.
-    sig { params(block: Block).returns(Block) }
+    sig { params(block: Block).returns(T.self_type) }
     def append_block!(block)
       block.insert_into_region!(back)
+      self
     end
 
     ## Remove a block from this region.
-    sig { params(block: Block).returns(Region) }
+    sig { params(block: Block).returns(T.self_type) }
     def remove_block!(block)
       raise "block is not a child of this region" if self != block.parent_region
       block.remove_from_region!
@@ -185,6 +186,11 @@ module NPC
     sig { returns(String) }
     def inspect
       "<region:#{object_id}>"
+    end
+
+    sig { void }
+    def dump
+      Printer.print_region(self)
     end
   end
 end
