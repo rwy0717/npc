@@ -275,63 +275,73 @@ module NPC
     end
   end
 
-  class DominanceError < T::Struct
+  class DominanceError < Error
     extend T::Sig
 
-    const :operand, Operand
+    sig { params(operand: Operand, cause: Cause).void }
+    def initialize(operand, cause = nil)
+      super(cause)
+      @operand = T.let(operand, Operand)
+    end
 
-    # sig { returns(String) }
-    # def message
-    #   user  = operand.owning_operation
-    #   value = operand.get
+    sig { returns(Operand) }
+    attr_accessor :operand
 
-    #   "operation #{operand.owning_operation."
+    sig { returns(String) }
+    def message
+      "#{operand} uses value #{operand.get} before it's definition"
+    end
   end
 
   class DominanceVerifier
     extend T::Sig
 
-    sig { params(root: Operation).returns(T::Array[DominanceError]) }
+    # Recursively verify the regions in the operation.
+    # Verifies that:
+    # - all values are defined before use
+    # - the entry block of a region has no predecessors (TODO)
+    # - All blocks in a region are reachable (TODO)
+    sig { params(root: Operation).returns(T.nilable(Error)) }
     def call(root)
       validate_operation(root, Dominance.new)
     end
 
-    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
     def validate_operation(operation, dominance)
-      errors = validate_operands(operation, dominance)
-      return errors if errors.any?
+      error = validate_operands(operation, dominance)
+      return OperationError.new(operation, error) if error
       validate_regions(operation, dominance)
     end
 
-    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
     def validate_operands(operation, dominance)
       operation.operands.each do |operand|
         value = operand.get!
         unless dominance.value_dominates(value, operation)
-          return [DominanceError.new(operand: operand)]
+          return DominanceError.new(operand)
         end
       end
-      []
+      nil
     end
 
-    sig { params(operation: Operation, dominance: Dominance).returns(T::Array[DominanceError]) }
+    sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
     def validate_regions(operation, dominance)
       operation.regions.each do |region|
-        errors = validate_region(region, dominance)
-        return errors if errors.any?
+        error = validate_region(region, dominance)
+        return error if error
       end
-      []
+      nil
     end
 
-    sig { params(region: Region, dominance: Dominance).returns(T::Array[DominanceError]) }
+    sig { params(region: Region, dominance: Dominance).returns(T.nilable(Error)) }
     def validate_region(region, dominance)
       region.blocks.each do |block|
         block.operations.each do |operation|
-          errors = validate_operation(operation, dominance)
-          return errors if errors.any?
+          error = validate_operation(operation, dominance)
+          return RegionError.new(region, error) if error
         end
       end
-      []
+      nil
     end
   end
 

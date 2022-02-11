@@ -6,14 +6,22 @@ module NPC
     T.any(NilClass, String, Error)
   end
 
-  class Error < RuntimeError
+  # An error that occured.
+  #
+  # Errors can track an optional "cause", which is an
+  # error object that signifies the underlying error.
+  # Causes can be chained together to form large traces.
+  #
+  # When a string is passed as the cause, it is automatically
+  # converted to an ErrorMessage object.
+  #
+  class Error < StandardError
     extend T::Sig
 
     sig { params(cause: Cause).void }
     def initialize(cause = nil)
-      if cause.is_a?(String)
-        cause = ErrorMessage.new(cause)
-      end
+      super()
+      cause = ErrorMessage.new(cause) if cause.is_a?(String)
       @cause = T.let(cause, T.nilable(Error))
     end
 
@@ -32,6 +40,11 @@ module NPC
     end
   end
 
+  #
+  # Common kinds of errors
+  #
+
+  # A generic error type, containing just a string message.
   class ErrorMessage < Error
     extend T::Sig
 
@@ -45,6 +58,7 @@ module NPC
     attr_accessor :message
   end
 
+  # An error related to an operation.
   class OperationError < Error
     extend T::Sig
 
@@ -63,6 +77,64 @@ module NPC
     end
   end
 
+  # An error related to a block.
+  class BlockError < Error
+    extend T::Sig
+
+    sig { params(block: Block, cause: Cause).void }
+    def initialize(block, cause = nil)
+      super(cause)
+      @block = T.let(block, Block)
+    end
+
+    sig { returns(Block) }
+    attr_accessor :block
+
+    sig { returns(String) }
+    def message
+      "invalid block #{block}"
+    end
+  end
+
+  # An error related to a region.
+  class RegionError < Error
+    extend T::Sig
+
+    sig { params(region: Region, cause: Cause).void }
+    def initialize(region, cause = nil)
+      super(cause)
+      @region = T.let(region, Region)
+    end
+
+    sig { returns(Region) }
+    attr_accessor :region
+
+    sig { returns(String) }
+    def message
+      "invalid region #{region}"
+    end
+  end
+
+  # An error related to an operand.
+  class OperandError < Error
+    extend T::Sig
+
+    sig { params(operand: Operand, cause: Cause).void }
+    def initialize(operand, cause = nil)
+      super(cause)
+      @operand = T.let(operand, Operand)
+    end
+
+    sig { returns(Operand) }
+    attr_accessor :operand
+
+    sig { returns(String) }
+    def message
+      "invalid operand #{operand}"
+    end
+  end
+
+  # An error related to a specific attribute.
   class AttributeError < Error
     extend T::Sig
 

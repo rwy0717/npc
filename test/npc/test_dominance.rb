@@ -164,9 +164,9 @@ class TestDominanceVerifier < Minitest::Test
     b0.append_operation!(x)
     b0.append_operation!(y)
 
-    errors = NPC::VerifyDominance.call(m)
-    assert_equal(1, errors.length)
-    e = T.cast(errors.first, NPC::DominanceError)
+    error = NPC::VerifyDominance.call(m)
+    assert(error)
+    e = T.cast(error, NPC::DominanceError)
     assert_equal(z.operand(0), e.operand)
   end
 
@@ -198,9 +198,9 @@ class TestDominanceVerifier < Minitest::Test
     z = NPC::Core::I32Add.new(x.result, y.result)
     b3.append_operation!(z)
 
-    errors = NPC::VerifyDominance.call(m)
-    assert_equal(1, errors.length)
-    e = T.cast(errors.first, NPC::DominanceError)
+    error = NPC::VerifyDominance.call(m)
+    assert(error)
+    e = T.cast(error, NPC::DominanceError)
     assert_equal(z.operand(0), e.operand)
   end
 end

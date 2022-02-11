@@ -193,4 +193,11 @@ module NPC
       Printer.print_region(self)
     end
   end
+
+  # A special kind of region that has no control flow.
+  # A graph region must have exactly one block, and that block
+  # has no terminators.
+  class GraphRegion < Region
+    extend T::Sig
+  end
 end

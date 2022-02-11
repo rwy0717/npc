@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 module NPC
-  # A mixin for operators definitions.
+  # A mixin in NPC for IR objects.
   module Trait
     extend T::Sig
 
@@ -11,11 +11,7 @@ module NPC
     end
   end
 
-  # A trait that can be implemented by a dialect.
-  module DialectTrait
-  end
-
-  # A trait that can be implemented by an operation.
+  # A mixin for an operation.
   module OperationTrait
     extend T::Sig
     extend T::Helpers
@@ -23,8 +19,6 @@ module NPC
 
     abstract!
 
-    class << self
-      extend T::Sig
-    end
+    requires_ancestor { NPC::Operation }
   end
 end
