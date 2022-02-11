@@ -7,13 +7,13 @@ module NPC
       extend T::Sig
       include OperationVerifier
 
-      sig { override.params(operation: Operation).returns(T::Array[VerificationError]) }
+      sig { override.params(operation: Operation).returns(T.nilable(Error)) }
       def verify(operation)
         if operation.regions.length == 1
-          success
-        else
-          failure("operation has more than one region")
+          return ErrorMessage.new("operation has more than one region")
         end
+
+        nil
       end
     end
 

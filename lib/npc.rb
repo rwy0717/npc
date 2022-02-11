@@ -24,6 +24,7 @@ end
 require("npc/argument")
 require("npc/block")
 require("npc/builder")
+require("npc/error")
 require("npc/foldable")
 require("npc/function_type")
 require("npc/iteration")

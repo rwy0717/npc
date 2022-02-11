@@ -140,15 +140,11 @@ class TestDominanceVerifier < Minitest::Test
     b0.append_operation!(x)
     b0.append_operation!(y)
     b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
-
     b1.append_operation!(NPC::Core::Goto.new(b3))
-
     b2.append_operation!(NPC::Core::Goto.new(b3))
-
     b3.append_operation!(NPC::Core::I32Add.new(x.result, y.result))
 
-    m.dump
-    p(NPC::VerifyDominance.call(m))
+    assert_empty(NPC::VerifyDominance.call(m))
   end
 
   sig { void }
