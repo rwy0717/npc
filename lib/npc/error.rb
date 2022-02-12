@@ -28,6 +28,17 @@ module NPC
     sig { returns(T.nilable(Error)) }
     attr_accessor :cause
 
+    sig { returns(Error) }
+    def root_cause
+      error = self
+      cause = error.cause
+      while cause
+        error = cause
+        cause = error.cause
+      end
+      error
+    end
+
     sig { returns(String) }
     def to_s
       msg = "error: #{message}".dup

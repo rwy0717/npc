@@ -17,10 +17,7 @@ class TestDominatorTree < MiniTest::Test
     assert_equal(n, n.parent)
     assert_equal(b, n.block)
     assert_equal(0, n.index)
-
-    e = NPC::VerifyDominance.call(m)
-    p(e)
-    assert_empty(e)
+    assert_nil(NPC::VerifyDominance.call(m))
   end
 
   sig { void }
@@ -117,7 +114,7 @@ class TestDominanceVerifier < Minitest::Test
     b0.append_operation!(y)
     b0.append_operation!(z)
 
-    assert_empty(NPC::VerifyDominance.call(m))
+    assert_nil(NPC::VerifyDominance.call(m))
   end
 
   sig { void }
@@ -144,7 +141,7 @@ class TestDominanceVerifier < Minitest::Test
     b2.append_operation!(NPC::Core::Goto.new(b3))
     b3.append_operation!(NPC::Core::I32Add.new(x.result, y.result))
 
-    assert_empty(NPC::VerifyDominance.call(m))
+    assert_nil(NPC::VerifyDominance.call(m))
   end
 
   sig { void }
@@ -166,7 +163,7 @@ class TestDominanceVerifier < Minitest::Test
 
     error = NPC::VerifyDominance.call(m)
     assert(error)
-    e = T.cast(error, NPC::DominanceError)
+    e = T.cast(error.root_cause, NPC::DominanceError)
     assert_equal(z.operand(0), e.operand)
   end
 
@@ -198,9 +195,8 @@ class TestDominanceVerifier < Minitest::Test
     z = NPC::Core::I32Add.new(x.result, y.result)
     b3.append_operation!(z)
 
-    error = NPC::VerifyDominance.call(m)
-    assert(error)
-    e = T.cast(error, NPC::DominanceError)
-    assert_equal(z.operand(0), e.operand)
+    error = NPC::VerifyDominance.call(m)&.root_cause
+    error = T.cast(error.root_cause, NPC::DominanceError)
+    assert_equal(z.operand(0), error.operand)
   end
 end

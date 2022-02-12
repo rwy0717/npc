@@ -72,8 +72,13 @@ module NPC
       table.fetch(block)
     end
 
+    sig { params(block: Block).returns(T::Boolean) }
+    def reachable?(block)
+      table.key?(block)
+    end
+
     sig { params(a: Block, b: Block).returns(T::Boolean) }
-    def dominates(a, b)
+    def dominates?(a, b)
       node_a = @table.fetch(a)
       node_b = @table.fetch(b)
       loop do
@@ -121,7 +126,7 @@ module NPC
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
-      def dominates(a, b)
+      def dominates?(a, b)
         raise "operation not in block" if
           a.parent_block != @block || b.parent_block != @block
 
@@ -129,8 +134,8 @@ module NPC
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
-      def properly_dominates(a, b)
-        a != b && dominates(a, b)
+      def properly_dominates?(a, b)
+        a != b && dominates?(a, b)
       end
     end
 
@@ -166,19 +171,24 @@ module NPC
       end
 
       sig { params(a: Operation, b: Operation).returns(T::Boolean) }
-      def dominates(a, b)
+      def dominates?(a, b)
         block_a = a.parent_block!
         block_b = b.parent_block!
         if block_a == block_b
-          block_info(block_a).dominates(a, b)
+          block_info(block_a).dominates?(a, b)
         else
-          block_dominates(block_a, block_b)
+          block_dominates?(block_a, block_b)
         end
       end
 
       sig { params(a: Block, b: Block).returns(T::Boolean) }
-      def block_dominates(a, b)
-        dominator_tree.dominates(a, b)
+      def block_dominates?(a, b)
+        dominator_tree.dominates?(a, b)
+      end
+
+      sig { params(block: Block).returns(T::Boolean) }
+      def block_reachable?(block)
+        dominator_tree.reachable?(block)
       end
     end
 
@@ -225,13 +235,13 @@ module NPC
     #   a does not dominate itself, or any descendent operations.
     # Determines non-strict domination by default.
     sig { params(a: Operation, b: Operation, strict: T::Boolean).returns(T::Boolean) }
-    def dominates(a, b, strict: false)
+    def dominates?(a, b, strict: false)
       block_a = a.parent_block!
       region_a = block_a.parent_region!
       b = ancestor_in_region(b, region_a)
       return false if b.nil?
       return !strict if a == b
-      region_info(region_a).dominates(a, b)
+      region_info(region_a).dominates?(a, b)
     end
 
     # Test if operation a is "before" operation b.
@@ -240,9 +250,9 @@ module NPC
     # - strict domination, where a would not dominate inner operations.
     # - non-strict domination, where a is considered to dominate itself.
     sig { params(a: Operation, b: Operation).returns(T::Boolean) }
-    def properly_dominates(a, b)
+    def properly_dominates?(a, b)
       return false if a == b
-      dominates(a, b, strict: false)
+      dominates?(a, b, strict: false)
     end
 
     # Does the block a come "before" block b?
@@ -252,26 +262,37 @@ module NPC
     #   a does not dominate itself, or any descendent operations.
     # Determines non-strict domination by default.
     sig { params(a: Block, b: Block, strict: T::Boolean).returns(T::Boolean) }
-    def block_dominates(a, b, strict: false)
+    def block_dominates?(a, b, strict: false)
       region_a = a.parent_region!
       b = block_ancestor_in_region(b, region_a)
       return false if b.nil?
       return !strict if a == b
-      region_info(region_a).block_dominates(a, b)
+      region_info(region_a).block_dominates?(a, b)
     end
 
     # Is the value defined before an operation, such that the value can be used
     # as an operand to the operation.
     sig { params(value: Value, operation: Operation).returns(T::Boolean) }
-    def value_dominates(value, operation)
+    def value_dominates?(value, operation)
       case value
       when Argument
-        block_dominates(value.owning_block, operation.parent_block!)
+        block_dominates?(value.owning_block, operation.parent_block!)
       when Result
-        dominates(value.owning_operation, operation, strict: true)
+        dominates?(value.owning_operation, operation, strict: true)
       else
         raise "Unknown class #{value.class.name}"
       end
+    end
+
+    # Is the block reachable from the entry block of it's region?
+    sig { params(block: Block).returns(T::Boolean) }
+    def block_reachable?(block)
+      # The dominance tree only includes blocks that are reachable
+      # from the root. To determine reachability, build the table,
+      # and test if the block is in the table.
+      region = block.parent_region
+      return false if region.nil?
+      region_info(region).block_reachable?(block)
     end
   end
 
@@ -299,25 +320,24 @@ module NPC
     # Recursively verify the regions in the operation.
     # Verifies that:
     # - all values are defined before use
-    # - the entry block of a region has no predecessors (TODO)
-    # - All blocks in a region are reachable (TODO)
+    # - All blocks in a region are reachable
     sig { params(root: Operation).returns(T.nilable(Error)) }
     def call(root)
-      validate_operation(root, Dominance.new)
+      verify_operation(root, Dominance.new)
     end
 
     sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
-    def validate_operation(operation, dominance)
-      error = validate_operands(operation, dominance)
+    def verify_operation(operation, dominance)
+      error = verify_operands(operation, dominance)
       return OperationError.new(operation, error) if error
-      validate_regions(operation, dominance)
+      verify_regions(operation, dominance)
     end
 
     sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
-    def validate_operands(operation, dominance)
+    def verify_operands(operation, dominance)
       operation.operands.each do |operand|
         value = operand.get!
-        unless dominance.value_dominates(value, operation)
+        unless dominance.value_dominates?(value, operation)
           return DominanceError.new(operand)
         end
       end
@@ -325,20 +345,36 @@ module NPC
     end
 
     sig { params(operation: Operation, dominance: Dominance).returns(T.nilable(Error)) }
-    def validate_regions(operation, dominance)
+    def verify_regions(operation, dominance)
       operation.regions.each do |region|
-        error = validate_region(region, dominance)
+        error = verify_region(region, dominance)
         return error if error
       end
       nil
     end
 
     sig { params(region: Region, dominance: Dominance).returns(T.nilable(Error)) }
-    def validate_region(region, dominance)
+    def verify_region(region, dominance)
+      entry_block = region.first_block
+      return nil if entry_block.nil?
+
+      # Reachability
+
+      block = T.let(entry_block.next_block, T.nilable(Block))
+      while block
+        unless dominance.block_reachable?(block)
+          return RegionError.new(region,
+            BlockError.new(block, "not reachable from region's entry block"))
+        end
+        block = block.next_block
+      end
+  
+      # Value domination checks
+
       region.blocks.each do |block|
         block.operations.each do |operation|
-          error = validate_operation(operation, dominance)
-          return RegionError.new(region, error) if error
+          error = verify_operation(operation, dominance)
+          return RegionError.new(region, BlockError.new(block, error)) if error
         end
       end
       nil

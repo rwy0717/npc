@@ -6,7 +6,6 @@ require_relative("test")
 class TestVerification < MiniTest::Test
   extend T::Sig
 
-  focus
   sig { void }
   def test_simple
     m = NPC::Core::Module.new("example")
