@@ -16,7 +16,7 @@ class TestPostOrderIter < MiniTest::Test
   sig { void }
   def test_linear_cfg
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
     m.region(0).first_block!.append_operation!(f)
 
     r = f.region(0)
@@ -33,7 +33,7 @@ class TestPostOrderIter < MiniTest::Test
   sig { void }
   def test_diamond_cfg
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
     m.region(0).first_block!.append_operation!(f)
     r = f.region(0)
 

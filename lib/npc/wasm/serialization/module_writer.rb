@@ -1,8 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-# https://webassembly.github.io/spec/core/syntax/instructions.html
-
 module WASM
   class ModuleWriter
     extend T::Sig

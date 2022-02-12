@@ -303,20 +303,18 @@ module NPC
       params(
         results: T::Array[Type],
         operands: T::Array[T.nilable(Value)],
-        block_operands: T::Array[T.nilable(Block)],
         attributes: T::Hash[Symbol, T.untyped],
-        successors: T::Array[T.nilable(Block)],
-        regions: Integer,
+        block_operands: T::Array[T.nilable(Block)],
+        regions: T::Array[RegionKind],
         loc: T.nilable(Location),
       ).void
     end
     def initialize(
       results: [],
       operands: [],
-      block_operands: [],
       attributes: {},
-      successors: [],
-      regions: 0,
+      block_operands: [],
+      regions: [],
       loc: nil
     )
       @operands = T.let([], T::Array[Operand])
@@ -335,8 +333,13 @@ module NPC
       end
 
       @regions = T.let([], T::Array[Region])
-      regions.times do
-        @regions.push(Region.new)
+      regions.each do |region_kind|
+        case region_kind
+        when RegionKind::Exec
+          @regions.push(Region.new(self))
+        when RegionKind::Decl
+          @regions.push(GraphRegion.new(self))
+        end
       end
 
       @attributes = T.let(attributes, T::Hash[Symbol, T.untyped])

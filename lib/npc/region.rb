@@ -2,6 +2,15 @@
 # frozen_string_literal: true
 
 module NPC
+  class RegionKind < T::Enum
+    enums do
+      # executed region type -- normal region
+      Exec = new
+      # declarative region type -- graph region.
+      Decl = new
+    end
+  end
+
   class OperationsInRegion
     extend T::Sig
     extend T::Generic
@@ -57,7 +66,7 @@ module NPC
     extend T::Sig
 
     sig { params(parent_operation: T.nilable(Operation)).void }
-    def initialize(parent_operation = nil)
+    def initialize(parent_operation)
       @parent_operation = T.let(parent_operation, T.nilable(Operation))
       @sentinel = T.let(BlockSentinel.new(self), BlockSentinel)
     end
@@ -196,7 +205,7 @@ module NPC
 
   # A special kind of region that has no control flow.
   # A graph region must have exactly one block, and that block
-  # has no terminators.
+  # has no terminators. These properties are checked by the verifier.
   class GraphRegion < Region
     extend T::Sig
   end

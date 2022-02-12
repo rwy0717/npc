@@ -26,6 +26,7 @@ class Options < T::Struct
   prop :command, Symbol, default: :unknown
   prop :output_filename, T.nilable(String), default: nil
   prop :passes, T::Array[String], factory: -> { [] }
+  prop :verify, T::Boolean, default: false
 end
 
 #
@@ -66,6 +67,12 @@ def dump(options)
   ir = BF::IRGen.run(program)
 
   NPC::Printer.print_operation(ir)
+  $stdout << "\n"
+
+  if options.verify
+    error = NPC::Verify.call(ir)
+    print error.to_s if error
+  end
 
   options.passes.each do |pass_name|
     pass = PASS_TABLE[pass_name]
@@ -73,6 +80,12 @@ def dump(options)
     print("====#{pass_name}====\n")
     pass.run(ir)
     NPC::Printer.print_operation(ir)
+    $stdout << "\n"
+
+    if options.verify
+      error = NPC::Verify.call(ir)
+      print error.to_s if error
+    end
   end
 
   exit(0)
@@ -104,6 +117,9 @@ def main
     end
     opts.on("-p", "--pass=PASS", String, "Perform a pass") do |pass|
       options.passes << pass
+    end
+    opts.on("-v", "--verify", "Verify IR between passes") do
+      options.verify = true
     end
   end
 

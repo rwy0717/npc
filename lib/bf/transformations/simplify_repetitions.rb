@@ -5,11 +5,9 @@ module BF
   class SimplifyRepetitions
     extend T::Sig
 
-    sig { params(mod: NPC::Core::Module).returns(T::Boolean) }
-    def run(mod)
-      f = T.cast(mod.region(0).first_block!.first_operation!, NPC::Core::Function)
-      b = f.region(0).first_block!
-      simplify_block!(b)
+    sig { params(program: IR::Program).returns(T::Boolean) }
+    def run(program)
+      simplify_block!(program.body)
       true
     end
 

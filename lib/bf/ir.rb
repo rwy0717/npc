@@ -7,18 +7,23 @@ module BF
       extend T::Sig
       extend T::Helpers
       # include NPC::NoResult
+      include NPC::NoTerminator
 
       sig { void }
       def initialize
-        super()
-        @body = T.let(NPC::Region.new, NPC::Region)
+        super(regions: [NPC::RegionKind::Exec])
+        body_region.append_block!(NPC::Block.new)
       end
 
-      sig { returns(T::Array[NPC::Result]) }
-      attr_reader :results
-
       sig { returns(NPC::Region) }
-      attr_reader :body
+      def body_region
+        region(0)
+      end
+
+      sig { returns(NPC::Block) }
+      def body
+        body_region.first_block!
+      end
     end
 
     module AmountAttribute
@@ -84,11 +89,7 @@ module BF
 
       sig { params(amount: Integer).void }
       def initialize(amount = 1)
-        super(
-          attributes: {
-            amount: amount,
-          }
-        )
+        super(attributes: { amount: amount })
       end
     end
 
@@ -99,13 +100,11 @@ module BF
     class Loop < NPC::Operation
       extend T::Sig
       include NPC::OneRegion
+      include NPC::NoTerminator
 
       sig { void }
       def initialize
-        super(
-          regions: 1
-        )
-
+        super(regions: [NPC::RegionKind::Exec])
         region(0).append_block!(NPC::Block.new)
       end
 

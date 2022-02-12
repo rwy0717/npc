@@ -11,22 +11,22 @@ module NPC
       sig do
         params(
           name: String,
-          region: Region,
-          # parameter_types: T::Array[Type],
-          # result_types:
+          args: T::Array[Type],
+          rets: T::Array[Type],
           loc: T.nilable(Location),
         ).void
       end
-      def initialize(name, region = Region.new, loc: nil)
+      def initialize(name, args, rets, loc: nil)
         super(
-          regions: 1,
+          regions: [RegionKind::Exec],
           attributes: {
             name: name,
+            rets: rets,
           },
           loc: loc,
         )
 
-        region(0).append_block!(Block.new)
+        region(0).append_block!(Block.new(args))
       end
 
       sig { override.returns(String) }

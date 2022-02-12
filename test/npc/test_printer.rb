@@ -12,7 +12,7 @@ class TestPrinter < Minitest::Test
 
     # Function 1
 
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
     m.region(0).first_block!.append_operation!(f)
 
     b1 = NPC::Builder.new(f.region(0).first_block!.front)
@@ -30,7 +30,7 @@ class TestPrinter < Minitest::Test
 
     # Function 2
 
-    f2 = NPC::Core::Function.new("another_test")
+    f2 = NPC::Core::Function.new("another_test", [], [])
     f2.region(0).first_block!.add_argument(NPC::Core::I32)
 
     m.region(0).first_block!.append_operation!(f2)

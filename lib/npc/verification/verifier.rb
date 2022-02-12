@@ -2,8 +2,18 @@
 # frozen_string_literal: true
 
 module NPC
-  class Verifier
-    def verify_operation(operation)
-    end
-  end
+  # module Ce
+  # class VerificationError
+  # end
+
+  # class Verification
+  # end
+
+  # class Verifier
+  #   extend T::Sig
+
+  #   sig { params(operation: Operation).returns(TVerification) }
+  #   def verify_operation(op)
+  #   end
+  # end
 end

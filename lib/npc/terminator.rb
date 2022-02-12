@@ -7,4 +7,11 @@ module NPC
   module Terminator
     include OperationTrait
   end
+
+  # A trait that indicates that blocks under this operation are implicitly
+  # terminated. An implicitly terminated block does not require a proper terminator.
+  # The core verifier detects this trait when verifying control flow.
+  module NoTerminator
+    include OperationTrait
+  end
 end

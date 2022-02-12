@@ -9,7 +9,7 @@ module BF
     class << self
       extend T::Sig
 
-      sig { params(prog: String).returns(NPC::Core::Module) }
+      sig { params(prog: String).returns(IR::Program) }
       def run(prog)
         IRGen.new.run(prog)
       end
@@ -17,14 +17,11 @@ module BF
 
     extend T::Sig
 
-    sig { params(prog: String).returns(NPC::Core::Module) }
+    sig { params(prog: String).returns(IR::Program) }
     def run(prog)
-      mod = NPC::Core::Module.new("program")
-      fun = NPC::Core::Function.new("main")
-
-      mod.body_block.append_operation!(fun)
+      program = IR::Program.new
       stack = []
-      b = NPC::Builder.at_back(fun.body_region.first_block!)
+      b = NPC::Builder.at_back(program.body)
       i = 0
 
       while i < prog.length
@@ -51,7 +48,7 @@ module BF
         i += 1
       end
 
-      mod
+      program
     end
   end
 end

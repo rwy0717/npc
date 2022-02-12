@@ -391,6 +391,7 @@ module NPC
       @sentinel.next_link == @sentinel
     end
 
+    # Does this block contain exactly one operation?
     sig { returns(T::Boolean) }
     def one_operation?
       n = @sentinel.next_link

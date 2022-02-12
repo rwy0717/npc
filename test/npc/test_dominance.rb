@@ -26,7 +26,7 @@ class TestDominatorTree < MiniTest::Test
   sig { void }
   def test_linear_cfg
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
     m.region(0).first_block!.append_operation!(f)
     r = f.region(0)
 
@@ -52,7 +52,7 @@ class TestDominatorTree < MiniTest::Test
   sig { void }
   def test_diamond_cfg
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
     m.region(0).first_block!.append_operation!(f)
     r = f.region(0)
 
@@ -103,7 +103,7 @@ class TestDominanceVerifier < Minitest::Test
   sig { void }
   def test_valid_single_block
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
@@ -123,7 +123,7 @@ class TestDominanceVerifier < Minitest::Test
   sig { void }
   def test_valid_diamond
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
@@ -150,7 +150,7 @@ class TestDominanceVerifier < Minitest::Test
   sig { void }
   def test_invalid_single_block
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
@@ -173,7 +173,7 @@ class TestDominanceVerifier < Minitest::Test
   sig { void }
   def test_invalid_diamond
     m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test")
+    f = NPC::Core::Function.new("test", [], [])
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 

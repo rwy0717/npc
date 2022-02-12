@@ -19,8 +19,8 @@ module NPC
           attributes: {
             name: name,
           },
-          regions: 1,
-          loc: loc
+          regions: [RegionKind::Decl],
+          loc: loc,
         )
         body_region.append_block!(Block.new)
       end
