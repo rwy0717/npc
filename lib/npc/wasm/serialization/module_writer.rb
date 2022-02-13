@@ -2,6 +2,8 @@
 # frozen_string_literal: true
 
 module WASM
+  Out = T.any(StringIO, IO)
+
   class ModuleWriter
     extend T::Sig
     include WASM
@@ -28,7 +30,6 @@ module WASM
     end
 
     ## Intern a FuncType into this module. If a type index is given, give it right back.
-    ##
     sig { params(type: T.any(Integer, FuncType)).returns(Integer) }
     def intern_type(type)
       @types.intern(type)

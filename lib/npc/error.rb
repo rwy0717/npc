@@ -30,9 +30,9 @@ module NPC
 
     sig { returns(Error) }
     def root_cause
-      error = self
-      cause = error.cause
-      while cause
+      error = T.let(self, Error)
+      cause = T.let(error.cause, T.nilable(Error))
+      until cause.nil?
         error = cause
         cause = error.cause
       end

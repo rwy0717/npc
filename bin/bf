@@ -71,7 +71,7 @@ def dump(options)
 
   if options.verify
     error = NPC::Verify.call(ir)
-    print error.to_s if error
+    print(error.to_s) if error
   end
 
   options.passes.each do |pass_name|
@@ -84,7 +84,7 @@ def dump(options)
 
     if options.verify
       error = NPC::Verify.call(ir)
-      print error.to_s if error
+      print(error.to_s) if error
     end
   end
 

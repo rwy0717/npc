@@ -368,7 +368,7 @@ module NPC
         end
         block = block.next_block
       end
-  
+
       # Value domination checks
 
       region.blocks.each do |block|

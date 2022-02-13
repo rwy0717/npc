@@ -163,7 +163,7 @@ class TestDominanceVerifier < Minitest::Test
 
     error = NPC::VerifyDominance.call(m)
     assert(error)
-    e = T.cast(error.root_cause, NPC::DominanceError)
+    e = T.cast(T.must(error).root_cause, NPC::DominanceError)
     assert_equal(z.operand(0), e.operand)
   end
 
@@ -196,7 +196,7 @@ class TestDominanceVerifier < Minitest::Test
     b3.append_operation!(z)
 
     error = NPC::VerifyDominance.call(m)&.root_cause
-    error = T.cast(error.root_cause, NPC::DominanceError)
+    error = T.cast(error, NPC::DominanceError)
     assert_equal(z.operand(0), error.operand)
   end
 end
