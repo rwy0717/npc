@@ -6,31 +6,6 @@ require("npc/operand")
 require("npc/result")
 
 module NPC
-  # # @api private
-  # # An empty array of operands.
-  # # The default operand-array, when an operation has operands.
-  # NO_OPERANDS       = T.let([].freeze, T::Array[Operand])
-
-  # # @api private
-  # # An empty array of results.
-  # # The default result-array, when an operation has no results.
-  # NO_RESULTS        = T.let([].freeze, T::Array[Result])
-
-  # # @api private
-  # # An empty array of attributes.
-  # # The default attribute-hash, when an operation has no attributes.
-  # NO_ATTRIBUTES = T.let({}.freeze, T::Hash[Symbol, T.untyped])
-
-  # # @api private
-  # # An empy array of block-operands.
-  # # The default block-operand-array, when an operand has no block-operands.
-  # NO_BLOCK_OPERANDS = T.let([].freeze, T::Array[BlockOperand])
-
-  # # @api private
-  # # An empty array of regions.
-  # # The default region-array, when an operation has no regions.
-  # NO_REGIONS        = T.let([].freeze, T::Array[Region])
-
   # @api private
   # The interface for the intrusive-linked-list that chains together all operations in a block.
   module OperationLink
