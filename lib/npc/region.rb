@@ -1,10 +1,10 @@
-# typed: true
+# typed: strict
 # frozen_string_literal: true
 
 module NPC
   class RegionKind < T::Enum
     enums do
-      # executed region type -- normal region
+      # executed region type -- normal region.
       Exec = new
       # declarative region type -- graph region.
       Decl = new
@@ -17,7 +17,7 @@ module NPC
 
     include Enumerable
 
-    Elem = type_member(fixed: Operation)
+    Elem = type_member { { fixed: Operation } }
 
     sig { params(region: Region).void }
     def initialize(region)
@@ -44,7 +44,7 @@ module NPC
 
     include Enumerable
 
-    Elem = type_member(fixed: Block)
+    Elem = type_member { { fixed: Block } }
 
     sig { params(region: Region).void }
     def initialize(region)
@@ -172,6 +172,7 @@ module NPC
     sig { params(block: Block).returns(T.self_type) }
     def remove_block!(block)
       raise "block is not a child of this region" if self != block.parent_region
+
       block.remove_from_region!
       self
     end
@@ -206,6 +207,10 @@ module NPC
   # A special kind of region that has no control flow.
   # A graph region must have exactly one block, and that block
   # has no terminators. These properties are checked by the verifier.
+  #
+  # If an IR has a module op, which holds functions, then
+  # the module would have a declarative graph region, while the function
+  # would have a normal executable region.
   class GraphRegion < Region
     extend T::Sig
   end

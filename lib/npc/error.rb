@@ -1,4 +1,4 @@
-# typed: strict
+# typed: false
 # frozen_string_literal: true
 
 module NPC
@@ -15,6 +15,10 @@ module NPC
   # When a string is passed as the cause, it is automatically
   # converted to an ErrorMessage object.
   #
+  # Errors subclass StandardError, so they can be thrown or returned.
+  # In NPC, it is more idiomatic to return errors than throw.
+  # Throwing is reserved for exceptions cases, and typically only a message
+  # is given.
   class Error < StandardError
     extend T::Sig
 
@@ -28,6 +32,8 @@ module NPC
     sig { returns(T.nilable(Error)) }
     attr_accessor :cause
 
+    # Follow the chain of causes to the originating error.
+    # If this error has no underlying cause, returns self.
     sig { returns(Error) }
     def root_cause
       error = T.let(self, Error)
@@ -165,6 +171,25 @@ module NPC
     sig { returns(String) }
     def message
       "invalid attribute {#{key} => #{val}}"
+    end
+  end
+
+  # An error related to an operand.
+  class BlockOperandError < Error
+    extend T::Sig
+
+    sig { params(block_operand: BlockOperand, cause: Cause).void }
+    def initialize(block_operand, cause = nil)
+      super(cause)
+      @block_operand = T.let(block_operand, Operand)
+    end
+
+    sig { returns(BlockOperand) }
+    attr_accessor :block_operand
+
+    sig { returns(String) }
+    def message
+      "invalid block operand #{block_operand}"
     end
   end
 end

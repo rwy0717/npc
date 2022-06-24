@@ -23,8 +23,22 @@ module NPC
     sig { returns(T.nilable(Type)) }
     attr_accessor :type
 
+    sig { returns(Type) }
+    def type!
+      raise "no type" if @type.nil?
+
+      @type
+    end
+
     sig { returns(T.nilable(Operand)) }
     attr_accessor :first_use
+
+    #
+    # The first use of th
+    sig { returns(Operand) }
+    def first_use!
+      T.must(@first_use)
+    end
 
     # Does this have no uses?
     sig { returns(T::Boolean) }
@@ -41,12 +55,7 @@ module NPC
     # Does this have exactly one use?
     sig { returns(T::Boolean) }
     def used_once?
-      @first_use && !@first_use.next_use
-      if @first_use
-        @first_use.next_use.nil?
-      else
-        false
-      end
+      !@first_use.nil? && @first_use.next_use.nil?
     end
 
     sig { abstract.returns(T.nilable(Operation)) }

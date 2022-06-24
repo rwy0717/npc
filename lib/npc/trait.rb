@@ -21,4 +21,15 @@ module NPC
 
     requires_ancestor { NPC::Operation }
   end
+
+  # A mixin for a type.
+  module TypeTrait
+    extend T::Sig
+    extend T::Helpers
+    include Trait
+
+    abstract!
+
+    requires_ancestor { NPC::Type }
+  end
 end

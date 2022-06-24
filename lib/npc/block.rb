@@ -115,7 +115,7 @@ module NPC
 
     include Enumerable
 
-    Elem = type_member(fixed: Operation)
+    Elem = type_member { { fixed: Operation } }
 
     sig { params(block: Block).void }
     def initialize(block)
@@ -149,7 +149,7 @@ module NPC
 
     include Enumerable
 
-    Elem = type_member(fixed: BlockOperand)
+    Elem = type_member { { fixed: BlockOperand } }
 
     sig { params(root: T.nilable(BlockOperand)).void }
     def initialize(root)
@@ -183,7 +183,7 @@ module NPC
 
     include Enumerable
 
-    Elem = type_member(fixed: Operand)
+    Elem = type_member { { fixed: Operand } }
 
     sig { params(root: T.nilable(BlockOperand)).void }
     def initialize(root)
@@ -385,7 +385,7 @@ module NPC
       op if op.is_a?(Operation) && op.is_a?(Terminator)
     end
 
-    ## Does this block contain any operations?
+    # Does this block contain any operations?
     sig { returns(T::Boolean) }
     def empty?
       @sentinel.next_link == @sentinel
@@ -399,7 +399,7 @@ module NPC
       n != p && n.next_link == p
     end
 
-    ## An enumerable that walks the operations in this block.
+    # An enumerable that walks the operations in this block.
     sig { returns(OperationsInBlock) }
     def operations
       OperationsInBlock.new(self)
@@ -420,6 +420,7 @@ module NPC
     sig { params(operation: Operation).returns(Block) }
     def remove_operation!(operation)
       raise "operation is not a child of this block" if self != operation.parent_block
+
       operation.remove_from_block!
       self
     end
@@ -505,6 +506,7 @@ module NPC
     def any_successors?
       t = terminator
       return false unless t
+
       t.block_operands.any?
     end
 
@@ -512,6 +514,7 @@ module NPC
     def no_successors?
       t = terminator
       return true unless t
+
       t.block_operands.none?
     end
 

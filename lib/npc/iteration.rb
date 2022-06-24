@@ -75,12 +75,14 @@ module NPC
     sig { override.void }
     def advance!
       raise "advanced past end of array" if done?
+
       @index += 1
     end
 
     sig { override.returns(Elem) }
     def get
       raise "cannot fetch from iterator after end" if done?
+
       @array.fetch(@index)
     end
 

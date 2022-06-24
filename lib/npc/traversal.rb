@@ -15,7 +15,7 @@ module NPC
     extend T::Generic
     include Iterator
 
-    Elem = type_member(fixed: Block)
+    Elem = type_member { { fixed: Block } }
 
     sig { params(block: Block).void }
     def initialize(block)
@@ -37,8 +37,10 @@ module NPC
     sig { override.void }
     def advance!
       raise "cannot advance past end of sequence" if stack.empty?
+
       leave!
       return if stack.empty?
+
       enter!(iterator.next!) while frame.iterator.more?
     end
 
@@ -79,6 +81,7 @@ module NPC
       frame = @stack.pop
       raise "popped past end of stack" if frame.nil?
       raise "block not fully traversed" if frame.iterator.more?
+
       frame.block
     end
 
@@ -110,7 +113,7 @@ module NPC
     extend T::Generic
     include Enumerable
 
-    Elem = type_member(fixed: Block)
+    Elem = type_member { { fixed: Block } }
 
     sig { params(block: Block).void }
     def initialize(block)

@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require_relative("test")
+
 # require "wasm"
 # require "minitest/autorun"
 

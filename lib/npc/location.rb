@@ -13,7 +13,7 @@ module NPC
     include Location
   end
 
-  class KnownLocation < T::Struct
+  class SourceLocation < T::Struct
     extend T::Sig
     include Location
 

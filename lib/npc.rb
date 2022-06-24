@@ -52,6 +52,7 @@ require("npc/one_region")
 # Analysis
 
 require("npc/analysis")
+require("npc/pass")
 
 # IR Dialects
 

@@ -77,6 +77,7 @@ def dump(options)
   options.passes.each do |pass_name|
     pass = PASS_TABLE[pass_name]
     raise "unknown pass #{pass_name}" unless pass
+
     print("====#{pass_name}====\n")
     pass.run(ir)
     NPC::Printer.print_operation(ir)

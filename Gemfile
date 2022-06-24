@@ -4,7 +4,6 @@
 source "https://rubygems.org"
 
 gem "sorbet-runtime"
-gem "awesome_print"
 
 group :development, :test do
   gem "minitest-focus"

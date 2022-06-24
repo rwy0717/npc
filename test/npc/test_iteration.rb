@@ -14,7 +14,7 @@ class TestIterator < Minitest::Test
     extend T::Sig
     extend T::Generic
     include NPC::Iterator
-    Elem = type_member(fixed: Integer)
+    Elem = type_member { { fixed: Integer } }
 
     sig { void }
     def initialize

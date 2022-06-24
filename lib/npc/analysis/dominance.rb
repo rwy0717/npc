@@ -83,10 +83,12 @@ module NPC
       node_b = @table.fetch(b)
       loop do
         return true if node_a == node_b
+
         parent = node_b.parent
         # The entry node is dominated by itself, so break if
         # we get that far.
         break if node_b == parent
+
         node_b = T.must(parent)
       end
       false
@@ -162,6 +164,7 @@ module NPC
       sig { params(block: Block).returns(BlockInfo) }
       def block_info(block)
         raise "block not in region" if block.parent_region != @region
+
         @block_info_table[block] ||= BlockInfo.new(block)
       end
 
@@ -213,6 +216,7 @@ module NPC
         region = operation.parent_region
         return nil if region.nil?
         return operation if region == target
+
         operation = region.parent_operation!
       end
     end
@@ -222,8 +226,10 @@ module NPC
       loop do
         region = block.parent_region!
         return block if region == target
+
         b = region.parent_block
         return nil if b.nil?
+
         block = b
       end
     end
@@ -241,6 +247,7 @@ module NPC
       b = ancestor_in_region(b, region_a)
       return false if b.nil?
       return !strict if a == b
+
       region_info(region_a).dominates?(a, b)
     end
 
@@ -252,6 +259,7 @@ module NPC
     sig { params(a: Operation, b: Operation).returns(T::Boolean) }
     def properly_dominates?(a, b)
       return false if a == b
+
       dominates?(a, b, strict: false)
     end
 
@@ -267,6 +275,7 @@ module NPC
       b = block_ancestor_in_region(b, region_a)
       return false if b.nil?
       return !strict if a == b
+
       region_info(region_a).block_dominates?(a, b)
     end
 
@@ -292,6 +301,7 @@ module NPC
       # and test if the block is in the table.
       region = block.parent_region
       return false if region.nil?
+
       region_info(region).block_reachable?(block)
     end
   end
@@ -330,6 +340,7 @@ module NPC
     def verify_operation(operation, dominance)
       error = verify_operands(operation, dominance)
       return OperationError.new(operation, error) if error
+
       verify_regions(operation, dominance)
     end
 

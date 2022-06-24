@@ -40,6 +40,7 @@ module NPC
     def call(operation)
       error = verify_operation(operation)
       return error if error
+
       VerifyDominance.call(operation)
     end
 
@@ -66,6 +67,7 @@ module NPC
       while block
         error = verify_block(block)
         return RegionError.new(region, error) if error
+
         block = block.next_block
       end
 
@@ -166,6 +168,7 @@ module NPC
     sig { params(operation: Operation).returns(T.nilable(Error)) }
     def verify_cfg_in(operation)
       return nil if operation.regions.empty?
+
       VerifyDominance.call(operation)
     end
   end

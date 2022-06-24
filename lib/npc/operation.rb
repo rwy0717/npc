@@ -74,7 +74,7 @@ module NPC
     end
 
     # The operation, that holds the region, that holds the block, that holds this operation-link.
-    sig { returns(Region) }
+    sig { returns(T.nilable(Operation)) }
     def parent_operation
       parent_region&.parent_operation
     end
@@ -255,6 +255,7 @@ module NPC
 
         define_method("#{name}=") do |value|
           raise "must be value" unless value.is_a?(Value)
+
           operands[index].value = value
         end
 
@@ -353,7 +354,7 @@ module NPC
 
     sig { overridable.returns(String) }
     def operator_name
-      self.class.name
+      self.class.name.split("::").last.downcase
     end
 
     # @!group Attributes
@@ -572,6 +573,12 @@ module NPC
       result
     end
 
+    # True if the result passed in, is a result of this operation.
+    sig { params(result: Result).returns(T::Boolean) }
+    def defines?(result)
+      result.parent_operation == self
+    end
+
     # @!group Uses
 
     # Replace the uses of this operation's results with the results of a different operation.
@@ -623,6 +630,7 @@ module NPC
     sig { void }
     def erase!
       raise "cannot erase an operation that is used" if used?
+
       drop!
     end
 
@@ -658,6 +666,7 @@ module NPC
       operation = dup
       copy_operands_into(operation)
       copy_results_into(operation)
+      # TODO: ATTRIBUTES!!!!!!!!!!!
       operation
     end
 
@@ -667,6 +676,7 @@ module NPC
     def verify
       self.class.included_modules.each do |ancestor|
         next unless ancestor.is_a?(OperationVerifier)
+
         valid = ancestor.verify(self)
         unless valid
           return false
@@ -686,7 +696,7 @@ module NPC
 
     sig { returns(String) }
     def inspect
-      "<operation:#{object_id}>"
+      "#<{self.class.name}:#{object_id}>"
     end
   end
 end

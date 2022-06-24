@@ -18,7 +18,7 @@ module NPC
     extend T::Generic
     include Enumerable
 
-    Elem = type_member(fixed: Operand)
+    Elem = type_member { { fixed: Operand } }
 
     sig { params(use: T.nilable(Operand)).void }
     def initialize(use = nil)

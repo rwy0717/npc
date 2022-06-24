@@ -83,6 +83,7 @@ module NPC
     def block_name(block)
       name = block_names[block]
       raise "unnamed block" unless name
+
       name
     end
 
@@ -90,24 +91,28 @@ module NPC
     def region_name(region)
       name = region_names[region]
       raise "unnamed block" unless name
+
       name
     end
 
     sig { params(value: Value, name: String).void }
     def name_value!(value, name)
       raise "value aleady named" if value_names.key?(value)
+
       value_names[value] = name
     end
 
     sig { params(block: Block, name: String).void }
     def name_block!(block, name)
       raise "block aleady named" if block_names.key?(block)
+
       block_names[block] = name
     end
 
     sig { params(region: Region, name: String).void }
     def name_region!(region, name)
       raise "region aleady named" if region_names.key?(region)
+
       region_names[region] = name
     end
   end

@@ -28,14 +28,23 @@ module NPC
     sig { returns(Integer) }
     attr_reader :index
 
+    #
+    # This is an argument to the owning block.
+    #
     sig { returns(Block) }
     attr_reader :owning_block
 
+    #
+    # Since this argument is not the result of an operation, the definining operation is always nil.
+    #
     sig { override.returns(T.nilable(Operation)) }
     def defining_operation
       nil
     end
 
+    #
+    # Since this argument is defined by it's owning block, its defining block is the owning block.
+    #
     sig { override.returns(T.nilable(Block)) }
     def defining_block
       @owning_block

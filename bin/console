@@ -2,7 +2,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-# 1: set up bundler
+# 1: Set up bundler
 require "rubygems"
 require "bundler"
 
@@ -11,10 +11,6 @@ Bundler.setup(
   :development,
   :test,
 )
-
-# require "bundler/setup"
-
-# require "sorbet-runtime"
 
 # 2: load our code
 require "npc"
@@ -54,7 +50,5 @@ def mkoperand(op = mkop, value = nil, index: 0)
   )
 end
 
-# 5: gogogogogo
-# AwesomePrint.pry!
-# AwesomePrint.irb!
+# 5: start the interactive shell
 Pry.start
