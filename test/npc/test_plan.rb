@@ -10,7 +10,6 @@ class TestPass < Minitest::Test
   class BogusResult
   end
 
-
   class BogusAnalysis
     extend T::Sig
     extend T::Helpers
@@ -40,7 +39,7 @@ class TestPass < Minitest::Test
     def run(context, operation)
       puts("run #{self.class.name} on #{operation}")
       result = context.run_analysis(BogusAnalysis.instance)
-      p result
+      p(result)
       success(NPC::Preservation.all)
     end
   end

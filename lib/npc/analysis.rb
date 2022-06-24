@@ -29,7 +29,7 @@ module NPC
     sealed!
 
     # True if the preservation set indicates that the analysis was preserved.
-    # Note, 
+    # Note,
     sig { abstract.params(analysis: GenericAnalysis).returns(T::Boolean) }
     def preserved?(analysis); end
 
@@ -46,7 +46,7 @@ module NPC
       end
     end
 
-    # No analysis was preserved, all analyses are invalidated. 
+    # No analysis was preserved, all analyses are invalidated.
     class None
       extend T::Sig
       extend T::Helpers
@@ -78,7 +78,7 @@ module NPC
 
       sig(:final) { override.params(analysis: GenericAnalysis).returns(T::Boolean) }
       def preserved?(analysis)
-        return analyses.include?(analysis)
+        analyses.include?(analysis)
       end
 
       sig(:final) { params(analysis: GenericAnalysis).void }
@@ -242,14 +242,14 @@ module NPC
     def initialize(analysis_cache)
       @analysis_cache = T.let(analysis_cache, AnalysisCache)
     end
-  
+
     sig do
       type_parameters(:T).params(
         analysis: Analysis[T.type_parameter(:T)],
       ).returns(AnalysisResult[T.type_parameter(:T)])
     end
     def run_analysis(analysis)
-      @analysis_cache.get(T.unsafe(analysis))
+      @analysis_cache.get(analysis)
     end
   end
 
@@ -289,7 +289,7 @@ module NPC
       ).returns(AnalysisResult[T.type_parameter(:T)])
     end
     def get(analysis)
-      cached = get_cached(T.unsafe(analysis))
+      cached = get_cached(analysis)
       return cached if cached
 
       context = AnalysisContext.new(self)
@@ -320,7 +320,7 @@ module NPC
         ).returns(AnalysisResult[T.type_parameter(:T)])
     end
     def get_for_child(analysis, child)
-      child_cache(child).get(T.unsafe(analysis))
+      child_cache(child).get(analysis)
     end
 
     # Get or construct a cache for a child operation.
@@ -343,15 +343,15 @@ module NPC
       when Preservation::None
         # No results are preserved, drop everything.
         @cache.clear
-        @child_caches.each do |operation, cache|
+        @child_caches.each do |_operation, cache|
           cache.invalidate(preservation)
         end
       when Preservation::Some
-        @cache.each do |analysis, result|
+        @cache.each do |analysis, _result|
           invalidate_analysis(analysis, preservation)
         end
-        @child_caches.each do |operation, child_cache|
-         child_cache.invalidate(preservation)
+        @child_caches.each do |_operation, child_cache|
+          child_cache.invalidate(preservation)
         end
       end
     end
@@ -365,7 +365,7 @@ module NPC
       # This is wierd. We ask the analysis if, given the preservation set,
       # was the analysis invalid.
 
-      # The 
+      # The
       if analysis.valid?(preservation)
         preservation.add(analysis)
       else

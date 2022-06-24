@@ -156,7 +156,7 @@ module NPC
       sig { params(names: T::Array[String]).returns(Plan) }
       def from_names(names)
         passes = names.map do |name|
-          constant = Object.const_get(name)
+          constant = Object.const_get(name) # rubocop:disable Sorbet/ConstantsFromStrings
           raise "#{name} is not a pass" unless constant.is_a?(Pass)
 
           constant
@@ -238,6 +238,7 @@ module NPC
           block.operations.each do |operation|
             # TODO: Have to do "run pipeline stuff" here. IE invalidate analysis caches.
             next unless operation.is_a?(@target_class)
+
             subcontext = PassContext.new(
               context.analysis_cache.child_cache(operation),
             )
