@@ -3,20 +3,31 @@
 
 module NPC
   # A record of what analyses are preserved by a pass.
+  #
+  # Preservation sets come in three types:
+  # - {None}: all analyses are unconditionally invalidated. This is the default.
+  # - {All}:  all analyses remain valid.
+  # - {Some}: only some analyses will remain valid.
+  #
+  # When a pass succeeds by {PassResult::Success},
+  # it can provide a preservation set.
   module Preservation
     class << self
       extend T::Sig
 
+      # Create a preservation set where all analyses are preserved.
       sig { returns(All) }
       def all
         All.new
       end
 
+      # Create a preservation set where no analysis is preserved.
       sig { returns(None) }
       def none
         None.new
       end
 
+      # Create a preservation set where some analyses are preserved.
       sig { params(set: T::Set[GenericAnalysis]).returns(Some) }
       def some(set = Set[])
         Some.new(set)
@@ -28,8 +39,16 @@ module NPC
     abstract!
     sealed!
 
-    # True if the preservation set indicates that the analysis was preserved.
-    # Note,
+    # True if the preservation set includes the given analysis.
+    #
+    # @note Users should not need to explicitly test for validity. Analyses are automatically
+    #       invalidated after a pass has run.
+    #
+    # An analysis may still be valid, even if it's not preserved.
+    # And in the opposite case, an analysis may be invalid, even if it's preserved.
+    # The correct way to test for validity is to call +analysis.valid?(perservation)+.
+    #
+    # @see NPC::GenericAnalysis
     sig { abstract.params(analysis: GenericAnalysis).returns(T::Boolean) }
     def preserved?(analysis); end
 
@@ -60,7 +79,7 @@ module NPC
     end
 
     # Some analyses are preserved.
-    # Lists the analyses that were preserved.
+    # Lists the analyses that were explicitly preserved by the pass.
     # All other analyses are invalidated.
     class Some
       extend T::Sig

@@ -318,6 +318,7 @@ module NPC
       # Memory Operations
       #
 
+      # Load from a memory.
       class I32Load < Operation
         class << self
           extend T::Sig
@@ -353,6 +354,7 @@ module NPC
       # Memory Operations
       #
 
+      # Store to a memory.
       class Store < Operation
         extend T::Sig
 
@@ -394,78 +396,80 @@ module NPC
     # Local Operations
     #
 
-    # class Local
-    #   extend T::Sig
+    # A local variable in the current function.
+    class Local
+      extend T::Sig
 
-    #   sig { params(type: Type).void }
-    #   def initialize(type)
-    #     @type = T.let(type, Type)
-    #   end
+      sig { params(type: Type).void }
+      def initialize(type)
+        @type = T.let(type, Type)
+      end
 
-    #   sig { returns(Type) }
-    #   attr_accessor :type
-    # end
+      sig { returns(Type) }
+      attr_accessor :type
+    end
 
-    #   class Get < Operation
-    #     extend T::Sig
+    # Get a local variable.
+    class Get < Operation
+      extend T::Sig
 
-    #     sig { params(local: Local).void }
-    #     def initialize(local)
-    #       super(
-    #         attributes: {
-    #           local: local,
-    #         },
-    #         results: [local.type]
-    #       )
-    #     end
+      sig { params(local: Local).void }
+      def initialize(local)
+        super(
+          attributes: {
+            local: local,
+          },
+          results: [local.type]
+        )
+      end
 
-    #     sig { returns(String) }
-    #     def operation_name
-    #       "get"
-    #     end
+      sig { returns(String) }
+      def operation_name
+        "get"
+      end
 
-    #     sig { returns(Local) }
-    #     def local
-    #       T.cast(attribute(:local), Local)
-    #     end
+      sig { returns(Local) }
+      def local
+        T.cast(attribute(:local), Local)
+      end
 
-    #     sig { returns(Type) }
-    #     def type
-    #       local.type
-    #     end
+      sig { returns(Type) }
+      def type
+        local.type
+      end
 
-    #     sig { returns(Result) }
-    #     def value
-    #       result(0)
-    #     end
-    #   end
+      sig { returns(Result) }
+      def value
+        result(0)
+      end
+    end
 
-    #   class Set < Operation
-    #     extend T::Sig
+    # Set a local variable.
+    class Set < Operation
+      extend T::Sig
 
-    #     sig { params(local: Local, value: Value).void }
-    #     def initialize(local, value)
-    #       super(
-    #         attributes: {},
-    #         operands:   [value]
-    #       )
-    #     end
+      sig { params(local: Local, value: Value).void }
+      def initialize(local, value)
+        super(
+          attributes: {},
+          operands:   [value]
+        )
+      end
 
-    #     sig { returns(Local) }
-    #     def local
-    #       T.cast(attribute(:local), Local)
-    #     end
+      sig { returns(Local) }
+      def local
+        T.cast(attribute(:local), Local)
+      end
 
-    #     sig { returns(Type) }
-    #     def type
-    #       local.type
-    #     end
+      sig { returns(Type) }
+      def type
+        local.type
+      end
 
-    #     sig { returns(Value) }
-    #     def value
-    #       operand(0)
-    #     end
-    #   end
-    # end
+      sig { returns(Value) }
+      def value
+        operand(0)
+      end
+    end
   end
 end

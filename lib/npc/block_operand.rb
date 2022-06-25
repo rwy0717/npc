@@ -3,6 +3,9 @@
 
 module NPC
   # A special operand type that refers to a block.
+  # These are used to model control flow,
+  # so only block-terminator can use block operands.
+  # A block operand is assumed to be a potential jump target.
   class BlockOperand
     extend T::Sig
     extend T::Helpers

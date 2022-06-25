@@ -3,7 +3,7 @@
 
 module NPC
   # When a pass is run, the result indicates whether the pass was successful or not.
-  # Either `Success` or `Failure`.
+  # Either {Success} or {Failure}.
   module PassResult
     class << self
       extend T::Sig
@@ -17,7 +17,7 @@ module NPC
       end
 
       # Signal that a pass failed to execute.
-      # Optionally include an error.
+      # Optionally include the underlying error.
       sig { params(error: T.nilable(Error)).returns(Failure) }
       def failure(error = nil)
         Failure.new(error)
@@ -39,6 +39,7 @@ module NPC
       extend T::Sig
       include PassResult
 
+      # @param preservation [Preservation] The set of analyses that were preserved by this pass.
       sig { params(preservation: Preservation).void }
       def initialize(preservation = Preservation.none)
         @preservation = T.let(preservation, Preservation)
