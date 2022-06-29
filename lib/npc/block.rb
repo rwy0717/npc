@@ -505,9 +505,7 @@ module NPC
     sig { returns(T::Boolean) }
     def any_successors?
       t = terminator
-      return false unless t
-
-      t.block_operands.any?
+      t&.block_operands&.any? ? true : false
     end
 
     sig { returns(T::Boolean) }
@@ -524,7 +522,13 @@ module NPC
 
     sig { returns(String) }
     def inspect
-      "<block:#{object_id}>"
+      to_s
+    end
+
+    sig { returns(String) }
+    def to_s
+      id = "%016x" % object_id
+      "#<#{self.class.name}:0x#{id}>"
     end
 
     sig { void }

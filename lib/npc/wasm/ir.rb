@@ -466,10 +466,90 @@ module NPC
         local.type
       end
 
-      sig { returns(Value) }
-      def value
+      sig { returns(Operand) }
+      def value_operand
         operand(0)
       end
+
+      sig { returns(T.nilable(Value)) }
+      def value
+        value_operand.get
+      end
+
+      sig { returns(Value) }
+      def value!
+        value_operand.get!
+      end
+    end
+
+    #
+    # Lower-level, structure control flow operations.
+    #
+
+    # Create a label that can later be branched to via Br.
+    class BrLoop < Operation
+      extend T::Sig
+
+      sig { void }
+      def initialize
+        super(
+          regions: 1
+        )
+      end
+
+      sig { returns(Region) }
+      def body
+        region(0)
+      end
+    end
+
+    #
+    # "Structure Control Flow" Operations
+    #
+
+    # Create a label that can later be branched out of, via Br.
+    class BrBlock < Operation
+      extend T::Sig
+
+      sig { void }
+      def initialize
+        super(
+          regions: 1,
+        )
+      end
+
+      sig { returns(Region) }
+      def body
+        region(0)
+      end
+    end
+
+    # Branch into the beginning of a loop, or out to the end of a block.
+    class Br < Operation
+      extend T::Sig
+
+      sig { params(depth: Integer).void }
+      def initialize(depth)
+        super(
+          attributes: {
+            depth: depth,
+          }
+        )
+      end
+
+      sig { returns(Integer) }
+      def depth
+        T.cast(attribute(:depth), Integer)
+      end
+
+      sig { params(value: Integer).returns(Integer) }
+      def depth=(value)
+        T.cast(set_attribute!(:depth, value), Integer)
+      end
+    end
+
+    class If < Operation
+      extend T::Sig
     end
   end
 end

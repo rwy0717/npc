@@ -4,11 +4,22 @@
 module BF
   class SimplifyRepetitions
     extend T::Sig
+    include Singleton
+    include NPC::Pass
 
-    sig { params(program: IR::Program).returns(T::Boolean) }
-    def run(program)
-      simplify_block!(program.body)
-      true
+    sig do
+      override.params(
+        context: NPC::PassContext,
+        target:  NPC::Operation,
+      ).returns(NPC::PassResult)
+    end
+    def run(context, target)
+      unless target.is_a?(IR::Program)
+        return NPC::PassResult.failure
+      end
+
+      simplify_block!(target.body)
+      NPC::PassResult.success
     end
 
     sig { params(block: NPC::Block).void }

@@ -5,15 +5,9 @@ require("bf/ir")
 
 module BF
   ## Translates a BF program into IR
-  class IRGen
-    class << self
-      extend T::Sig
-
-      sig { params(prog: String).returns(IR::Program) }
-      def run(prog)
-        IRGen.new.run(prog)
-      end
-    end
+  class ProgramImporter
+    include NPC::Importer
+    include Singleton
 
     extend T::Sig
 

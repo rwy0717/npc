@@ -645,7 +645,7 @@ module NPC
       operation
     end
 
-    # @!section validation
+    # @!group validation
 
     sig { returns(T::Boolean) }
     def verify
@@ -661,6 +661,8 @@ module NPC
       true
     end
 
+    # @!group Printing
+
     sig { void }
     def dump
       # io = StringIO.new
@@ -671,7 +673,13 @@ module NPC
 
     sig { returns(String) }
     def inspect
-      "#<{self.class.name}:#{object_id}>"
+      to_s
+    end
+
+    sig { returns(String) }
+    def to_s
+      id = "%016x" % object_id
+      "#<#{self.class.name}:0x#{id}>"
     end
   end
 end

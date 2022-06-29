@@ -15,3 +15,5 @@ require "pry-byebug"
 require "objspace"
 
 require "npc"
+
+require_relative "./exir"

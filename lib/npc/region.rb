@@ -195,7 +195,13 @@ module NPC
 
     sig { returns(String) }
     def inspect
-      "<region:#{object_id}>"
+      to_s
+    end
+
+    sig { returns(String) }
+    def to_s
+      id = "%016x" % object_id
+      "#<#{self.class.name}:0x#{id}>"
     end
 
     sig { void }

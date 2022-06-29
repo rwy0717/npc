@@ -7,6 +7,20 @@ module NPC
   # A stateful iterator that is driven externally.
   # Useful for when the iteration state needs to be paused
   # or incrementally updated.
+  #
+  # Iterators have "one past the end" semantics.
+  # That is, the iterator is initially at the start of the sequence,
+  # and can be advanced once past the last element in the sequence.
+  #
+  # When the iterator is past the end of the sequence, {done?} returns true.
+  # and {get} will raise.
+  #
+  # The conventional way to work with iterators is:
+  #  iter = Iterator.new(sequence)
+  #  while !iter.done?
+  #    elem = iter.next!
+  #    do_something_with(elem)
+  #  end
   module Iterator
     extend T::Sig
     extend T::Helpers

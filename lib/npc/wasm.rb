@@ -10,6 +10,7 @@ require("npc")
 
 require_relative("wasm/ir")
 require_relative("wasm/serialization")
+require_relative("wasm/passes")
 
 # require("leb128")
 # require("wasm/constants.rb")

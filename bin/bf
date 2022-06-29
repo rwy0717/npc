@@ -55,7 +55,7 @@ end
 
 PASS_TABLE = T.let(
   {
-    "simplify" => BF::SimplifyRepetitions.new,
+    "simplify-repetitions" => BF::SimplifyRepetitions.instance,
   },
   T::Hash[String, T.untyped]
 )
@@ -63,8 +63,21 @@ PASS_TABLE = T.let(
 sig { params(options: Options).void }
 def dump(options)
   filename = ARGV.fetch(0)
-  program = File.read(filename)
-  ir = BF::IRGen.run(program)
+  program  = File.read(filename)
+  ir       = BF::ProgramImporter.instance.run(program)
+
+  if options.passes.any?
+    plan = NPC::Plan.new(
+      options.passes.map do |pass_name|
+        pass = PASS_TABLE[pass_name]
+        raise "unknown pass #{pass_name}" unless pass
+
+        pass
+      end
+    )
+
+    plan.run(ir)
+  end
 
   NPC::Printer.print_operation(ir)
   $stdout << "\n"
@@ -72,21 +85,7 @@ def dump(options)
   if options.verify
     error = NPC::Verify.call(ir)
     print(error.to_s) if error
-  end
-
-  options.passes.each do |pass_name|
-    pass = PASS_TABLE[pass_name]
-    raise "unknown pass #{pass_name}" unless pass
-
-    print("====#{pass_name}====\n")
-    pass.run(ir)
-    NPC::Printer.print_operation(ir)
-    $stdout << "\n"
-
-    if options.verify
-      error = NPC::Verify.call(ir)
-      print(error.to_s) if error
-    end
+    exit(1)
   end
 
   exit(0)

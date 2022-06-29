@@ -2,15 +2,53 @@
 # frozen_string_literal: true
 
 module NPC
-  # Information about when a block dominates another in a given region
+  # Information about when a block dominates another in a given region.
   class DominatorTree
-    class Node < T::Struct
+    class Node
       extend T::Sig
+      include GraphNode
 
-      prop :block, Block
-      prop :index, Integer
-      # the immediate dominator. Also called an idom.
-      prop :parent, T.nilable(Node)
+      sig { params(block: Block, index: Integer, parent: T.nilable(Node)).void }
+      def initialize(block, index, parent = nil)
+        @block    = T.let(block,  Block)
+        @parent   = T.let(parent, T.nilable(Node))
+        @children = T.let([],     T::Array[Node])
+        @index    = T.let(index,  Integer)
+      end
+
+      # The block this node represents.
+      sig { returns(Block) }
+      attr_reader :block
+
+      # The index or "level" of this block.
+      sig { returns(Integer) }
+      attr_reader :index
+
+      # The nearest dominator. Also called an idom or immediate dominator.
+      sig { returns(T.nilable(Node)) }
+      attr_reader :parent
+
+      sig { params(parent: Node).void }
+      def parent=(parent)
+        # raise "cannot set parent of root node" if @parent.nil?
+        @parent&.children&.delete(self)
+        @parent = parent
+        @parent.children << self
+      end
+
+      # The nodes which are dominated by this node.
+      sig { returns(T::Array[Node]) }
+      attr_reader :children
+
+      sig { returns(ArrayIterator[Node]) }
+      def children_iter
+        ArrayIterator.new(children)
+      end
+
+      sig { override.returns(ArrayIterator[Node]) }
+      def successors_iter
+        children_iter
+      end
 
       sig { returns(String) }
       def inspect
@@ -32,14 +70,14 @@ module NPC
       nodes = []
 
       PostOrder.new(first_block).each_with_index do |block, index|
-        node = Node.new(block: block, index: index)
+        node = Node.new(block, index)
         nodes << node
         @table[block] = node
       end
 
       # The entry node dominates itself, has no proper dominators.
       first_node = nodes.pop
-      first_node.parent = first_node
+      # first_node.parent = first_node
 
       changed = T.let(true, T::Boolean)
       while changed
@@ -51,7 +89,7 @@ module NPC
 
           block.predecessors.each do |pred|
             pred_node = @table.fetch(pred)
-            if pred_node.parent
+            if pred_node.parent || pred_node == first_node
               new_idom = intersect(new_idom, pred_node)
             end
           end
@@ -77,21 +115,18 @@ module NPC
       table.key?(block)
     end
 
+    # True if a improperly dominates b.
+    # That is, returns true if a and b are the same block.
     sig { params(a: Block, b: Block).returns(T::Boolean) }
     def dominates?(a, b)
-      node_a = @table.fetch(a)
-      node_b = @table.fetch(b)
-      loop do
-        return true if node_a == node_b
+      node = @table.fetch(b)
+      until a == node.block
+        parent = node.parent
+        return false unless parent
 
-        parent = node_b.parent
-        # The entry node is dominated by itself, so break if
-        # we get that far.
-        break if node_b == parent
-
-        node_b = T.must(parent)
+        node = parent
       end
-      false
+      true
     end
 
     # Find the nearest common ancestor of two nodes in the dominance tree.
@@ -108,6 +143,9 @@ module NPC
     end
   end
 
+  DominanceInfo = T.type_alias { Dominance }
+
+  # TODO: Rename to DominanceInfo.
   class Dominance
     # Dominance information about the operations in a block.
     # Essentially, assigns indexes to the operations in a block.
@@ -119,7 +157,7 @@ module NPC
 
       sig { params(block: Block).void }
       def initialize(block)
-        @block = block
+        @block       = block
         @index_table = T.let({}, T::Hash[Operation, Integer])
 
         block.operations.each_with_index do |operation, index|
@@ -202,6 +240,12 @@ module NPC
       @region_info_table = T.let({}, T::Hash[Region, RegionInfo])
     end
 
+    sig { params(region: Region).returns(RegionInfo) }
+    def for_region(region)
+      region_info(region)
+    end
+
+    # TODO: Replace with for_region.
     sig { params(region: Region).returns(RegionInfo) }
     def region_info(region)
       @region_info_table[region] ||= RegionInfo.new(region)
@@ -321,6 +365,26 @@ module NPC
     sig { returns(String) }
     def message
       "#{operand} uses value #{operand.get} before it's definition"
+    end
+  end
+
+  class DominanceAnalysis
+    extend T::Sig
+    extend T::Helpers
+    extend T::Generic
+    include Analysis
+    include Singleton
+
+    Value = type_member { { fixed: Dominance } }
+
+    sig do
+      override.params(
+        _context: AnalysisContext,
+        _target:  Operation,
+      ).returns(AnalysisResult[Dominance])
+    end
+    def run(_context, _target)
+      AnalysisResult::Success.new(Dominance.new)
     end
   end
 

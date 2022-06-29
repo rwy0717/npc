@@ -32,6 +32,7 @@ module NPC
 
     extend T::Sig
     extend T::Helpers
+    include Kernel
     sealed!
 
     # Signal that a pass executed successfully.
@@ -55,7 +56,7 @@ module NPC
       include PassResult
 
       sig { params(error: T.nilable(Error)).void }
-      def initialize(error)
+      def initialize(error = nil)
         @error = T.let(error, T.nilable(Error))
       end
 
@@ -90,6 +91,8 @@ module NPC
       PassResult.failure(error)
     end
   end
+
+  # A pass that only runs on certain operations.
 
   # Provides access to tracing, analyses, and subpass execution.
   class PassContext
@@ -173,12 +176,15 @@ module NPC
       @passes = T.let(passes, T::Array[Pass])
     end
 
+    # Append a pass to this plan.
     sig { params(pass: Pass).returns(Pass) }
     def add(pass)
       passes << pass
       pass
     end
 
+    # Create a subplan. Given a target class, run the subplan
+    # on every instance of the class.
     sig { params(target_class: Class).returns(Subplan) }
     def nest(target_class)
       subplan = Subplan.new(target_class)
@@ -189,6 +195,7 @@ module NPC
     sig { returns(T::Array[Pass]) }
     attr_reader :passes
 
+    # Execute this plan on the target operation.
     sig { params(target: Operation).returns(T.nilable(Error)) }
     def run(target)
       context = PassContext.new(
@@ -244,13 +251,15 @@ module NPC
               context.analysis_cache.child_cache(operation),
             )
             @passes.each do |pass|
-              pass.run(subcontext, operation)
+              result = pass.run(subcontext, operation)
+              return result if result.is_a?(PassResult::Failure)
             end
           end
         end
       end
-      # Already handled invalidation of analysis caches, anything still valid remains valid.
-      success(Preservation.all)
+      # Don't preserve any analyses for the target, we don't know whether
+      # they were invalidated by the passes in this subplan.
+      success
     end
   end
 end

@@ -1,4 +1,4 @@
-# typed: strict
+# typed: true
 # frozen_string_literal: true
 
 require_relative("test")
@@ -6,7 +6,6 @@ require_relative("test")
 class TestDominatorTree < MiniTest::Test
   extend T::Sig
 
-  sig { void }
   def test_single_block
     m = NPC::Core::Module.new("example")
     b = m.region(0).first_block!
@@ -14,10 +13,14 @@ class TestDominatorTree < MiniTest::Test
     tree = NPC::DominatorTree.new(m.region(0))
     n = tree.node(b)
 
-    assert_equal(n, n.parent)
-    assert_equal(b, n.block)
-    assert_equal(0, n.index)
+    assert_nil(n.parent)
+    assert_equal(b,  n.block)
+    assert_equal(0,  n.index)
+    assert_empty(n.children)
     assert_nil(NPC::VerifyDominance.call(m))
+
+    iter = NPC::PostOrderGraphIter.new(n)
+    assert_equal([n], iter.to_a!)
   end
 
   sig { void }
@@ -37,16 +40,20 @@ class TestDominatorTree < MiniTest::Test
     n0 = tree.node(b0)
     n1 = tree.node(b1)
 
-    assert_equal(n0, n0.parent)
-    assert_equal(b0, n0.block)
-    assert_equal(1,  n0.index)
+    assert_nil(n0.parent)
+    assert_equal(b0,   n0.block)
+    assert_equal(1,    n0.index)
+    assert_equal([n1], n0.children)
 
     assert_equal(n0, n1.parent)
     assert_equal(b1, n1.block)
     assert_equal(0,  n1.index)
+    assert_empty(n1.children)
+
+    iter = NPC::PostOrderGraphIter.new(n0)
+    assert_equal([n1, n0], iter.to_a!)
   end
 
-  sig { void }
   def test_diamond_cfg
     m = NPC::Core::Module.new("example")
     f = NPC::Core::Function.new("test", [], [])
@@ -72,26 +79,37 @@ class TestDominatorTree < MiniTest::Test
     n2 = tree.node(b2)
     n3 = tree.node(b3)
 
-    assert_equal(n0, n0.parent)
+    assert_nil(n0.parent)
     assert_equal(b0, n0.block)
-    assert_equal(3,  n0.index)
+    assert_equal(3, n0.index)
+    assert_equal([n2, n1, n3], n0.children)
 
     assert_equal(n0, n1.parent)
     assert_equal(b1, n1.block)
     assert_equal(1,  n1.index)
+    assert_empty(n1.children)
 
     assert_equal(n0, n2.parent)
     assert_equal(b2, n2.block)
     assert_equal(2,  n2.index)
+    assert_empty(n2.children)
 
     assert_equal(n0, n3.parent)
     assert_equal(b3, n3.block)
     assert_equal(0,  n3.index)
+    assert_empty(n3.children)
+
+    iter = NPC::PostOrderGraphIter.new(n0)
+    assert_equal([n2, n1, n3, n0], iter.to_a!)
   end
 end
 
 class TestDominance < MiniTest::Test
   extend T::Sig
+
+  sig { void }
+  def test_one_block
+  end
 end
 
 class TestDominanceVerifier < Minitest::Test

@@ -108,7 +108,83 @@ module NPC
     end
   end
 
+  # A classic enumerable that iterates over the blocks in a region in post order.
   class PostOrder
+    extend T::Sig
+    extend T::Generic
+    include Enumerable
+
+    Elem = type_member { { fixed: Block } }
+
+    # The entry block.
+    sig { params(block: Block).void }
+    def initialize(block)
+      @block = T.let(block, Block)
+    end
+
+    sig { override.params(proc: T.proc.params(arg0: Block).returns(BasicObject)).returns(T.self_type) }
+    def each(&proc)
+      PostOrderIter.new(@block).each! do |block|
+        proc.call(block)
+      end
+      self
+    end
+  end
+
+  # Iterate blocks in pre-order.
+  # For the
+  class PreOrderIterator
+    extend T::Sig
+    extend T::Generic
+    include Iterator
+
+    Elem = type_member { { fixed: Block } }
+
+    sig { params(block: Block).void }
+    def initialize(block)
+      @known = T.let(Set[block], T::Set[Block])
+      @queue = T.let([block],    T::Array[Block])
+      enqueue_successors(block)
+    end
+
+    #
+    # Iterator Interface
+    #
+
+    sig { override.returns(Elem) }
+    def get
+      T.must(@queue.first)
+    end
+
+    sig { override.void }
+    def advance!
+      raise "cannot advance past end of sequence" if @queue.empty?
+
+      @queue.shift
+      current = @queue.first
+      enqueue_successors(current) if current
+    end
+
+    sig { override.returns(T::Boolean) }
+    def done?
+      @queue.empty?
+    end
+
+    sig { params(block: Block).void }
+    def enqueue_successors(block)
+      terminator = block.terminator
+      return unless terminator
+
+      terminator.block_operands.each do |block_operand|
+        successor_block = block_operand.get
+        if successor_block && @known.add?(successor_block)
+          @queue << successor_block
+        end
+      end
+    end
+  end
+
+  class PreOrder
     extend T::Sig
     extend T::Generic
     include Enumerable
@@ -122,7 +198,7 @@ module NPC
 
     sig { override.params(proc: T.proc.params(arg0: Block).returns(BasicObject)).returns(T.self_type) }
     def each(&proc)
-      PostOrderIter.new(@block).each! do |block|
+      PreOrderIterator.new(@block).each! do |block|
         proc.call(block)
       end
       self

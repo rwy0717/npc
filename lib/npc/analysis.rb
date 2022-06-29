@@ -36,6 +36,7 @@ module NPC
 
     extend T::Sig
     extend T::Helpers
+    include Kernel
     abstract!
     sealed!
 
@@ -153,10 +154,10 @@ module NPC
     def failure?; end
 
     sig { abstract.returns(Value) }
-    def value; end
+    def value!; end
 
     sig { abstract.returns(T.nilable(Error)) }
-    def error; end
+    def error!; end
 
     # The analysis completed successfully.
     # The success object contains the results of the analysis.
@@ -186,12 +187,17 @@ module NPC
       end
 
       sig(:final) { override.returns(Value) }
-      attr_reader :value
+      def value!
+        @value
+      end
 
       sig(:final) { override.returns(T.nilable(Error)) }
-      def error
-        raise "Success result has no error"
+      def error!
+        raise "Result is not a failure"
       end
+
+      sig(:final) { returns(Value) }
+      attr_reader :value
     end
 
     # The analysis failed. Optionally contains an error.
@@ -221,11 +227,16 @@ module NPC
       end
 
       sig(:final) { override.returns(Value) }
-      def value
-        raise "Failure result has no value"
+      def value!
+        raise "Result is not a success"
       end
 
       sig(:final) { override.returns(T.nilable(Error)) }
+      def error!
+        @error
+      end
+
+      sig(:final) { returns(T.nilable(Error)) }
       attr_reader :error
     end
   end
@@ -379,12 +390,11 @@ module NPC
 
     # Try to invalidate an analysis result.
     # If the analysis indicates that it's valid, we ensure it's in the preservation set.
+    # If the analysis indicates that it's invalid, we remove it from the preservation set.
     sig { params(analysis: GenericAnalysis, preservation: Preservation::Some).void }
     def invalidate_analysis(analysis, preservation)
-      # This is wierd. We ask the analysis if, given the preservation set,
-      # was the analysis invalid.
-
-      # The
+      # This is wierd.
+      # We ask the analysis if, given the preservation set, was the analysis invalidated.
       if analysis.valid?(preservation)
         preservation.add(analysis)
       else
@@ -396,3 +406,4 @@ module NPC
 end
 
 require_relative("analysis/dominance.rb")
+require_relative("analysis/loop.rb")
