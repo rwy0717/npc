@@ -45,8 +45,8 @@ class TestCloning < Minitest::Test
     refute_equal(op1.operand(0), op2.operand(0))
     refute_equal(op1.operand(1), op2.operand(1))
 
-    assert_equal(op1.operand(0).get, op2.operand(0).get)
-    assert_equal(op1.operand(1).get, op2.operand(1).get)
+    assert_nil(op2.operand(0).get)
+    assert_equal(op0.result(0), op2.operand(1).get)
   end
 
   # The block operands have been cloned, but they should refer to the same blocks.
@@ -75,20 +75,18 @@ class TestCloning < Minitest::Test
 
   # When a region is cloned, so are it's blocks.
   def test_clone_regions_with_blocks
-    op1 = Operation.new(regions: [RegionKind::Exec])
-    region1 = op1.region(0)
+    op1      = Operation.new(regions: [RegionKind::Exec])
+    region1  = op1.region(0)
     block_a1 = Block.new
     block_b1 = Block.new
     region1.append_block!(block_a1)
     region1.append_block!(block_b1)
 
-    op2 = op1.clone
-    region2 = op2.region(0)
-
-    NPC::Printer.print_region(region2)
-
+    op2      = op1.clone
+    region2  = op2.region(0)
     block_a2 = region2.first_block!
     block_b2 = block_a2.next_block!
+
     refute_equal(region1, region2)
     refute_equal(block_a1, block_a2)
     refute_equal(block_b1, block_b2)
@@ -99,8 +97,8 @@ class TestCloning < Minitest::Test
     op1       = Operation.new(regions: [RegionKind::Exec])
     region1   = op1.region(0)
     block1    = Block.new
-    region1.append_block!(block1)
     inner_op1 = Operation.new
+    region1.append_block!(block1)
     block1.append_operation!(inner_op1)
 
     op2       = op1.clone
@@ -114,13 +112,13 @@ class TestCloning < Minitest::Test
     refute_equal(inner_op1, inner_op2)
   end
 
-  # When a block is cloned, it's argument uses are remapped.
+  # When a block is cloned, its arguments are remapped.
   def test_arguments_are_remapped
     op1       = Operation.new(regions: [RegionKind::Exec])
     region1   = op1.region(0)
     block1    = Block.new([ExIR::Num])
-    region1.append_block!(block1)
     inner_op1 = Operation.new(operands: [block1.argument(0)])
+    region1.append_block!(block1)
     block1.append_operation!(inner_op1)
 
     op2       = op1.clone
@@ -151,16 +149,25 @@ class TestCloning < Minitest::Test
     assert_equal(inner_op_a2.result(0), inner_op_b2.operand(0).get)
   end
 
-  # When a region is cloned
-  # - all inner blocks are cloned
-  # - for all cloned operations
-  #   - The block operands have been remapped.
-  def test_blocks_are_remapped
-    # op1 = Operation.new(regions: [RegionKind::Exec])
-    # region1 = op1.region(0)
-    # bb1 = Block.new(nil, [])
-    # bb2 =B
-    # region1.append_block!(bb1a)
-    # region1.append_block!(bb1b)
+  # When a block is cloned, its successors and predecessors are remapped.
+  def test_block_operands_are_remapped
+    op1      = Operation.new(regions: [RegionKind::Exec])
+    region1  = op1.region(0)
+    block_a1 = Block.new
+    block_b1 = Block.new
+    goto1    = ExIR::Goto.build(block_b1)
+    region1.append_block!(block_a1)
+    region1.append_block!(block_b1)
+    block_a1.append_operation!(goto1)
+
+    op2      = op1.clone
+    region2  = op2.region(0)
+    block_a2 = region2.first_block!
+    block_b2 = block_a2.next_block!
+    goto2    = block_a2.first_operation!
+
+    assert_equal([block_b2], block_a2.successors)
+    assert_equal([block_a2], block_b2.predecessors)
+    assert_equal(block_b2,   goto2.block_operand(0).get)
   end
 end
