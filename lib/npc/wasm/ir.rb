@@ -177,14 +177,18 @@ module NPC
       #
 
       class Module < Operation
-        extend T::Sig
-        # include DeclarativeOperation
+        class << self
+          extend T::Sig
 
-        sig { void }
-        def initialize
-          super(regions: [RegionKind::Decl])
-          region(0).append_block!(Block.new)
+          sig { returns(Module) }
+          def build
+            op = new(regions: [RegionKind::Decl])
+            op.region(0).append_block!(Block.new)
+            op
+          end
         end
+
+        extend T::Sig
 
         sig { returns(Region) }
         def body_region
@@ -203,16 +207,21 @@ module NPC
       end
 
       class Function < Operation
-        extend T::Sig
+        class << self
+          extend T::Sig
 
-        sig { params(params: T::Array[Type], result: T::Array[Type]).void }
-        def initialize(params, result)
-          super(
-            regions: [RegionKind::Exec],
-            attributes: { result: result },
-          )
-          region(0).append_block!(Block.new(params))
+          sig { params(params: T::Array[Type], result: T::Array[Type]).returns(Function) }
+          def build(params, result)
+            op = new(
+              regions: [RegionKind::Exec],
+              attributes: { result: result },
+            )
+            op.region(0).append_block!(Block.new(params))
+            op
+          end
         end
+
+        extend T::Sig
 
         sig { returns(Region) }
         def body_region
@@ -253,11 +262,13 @@ module NPC
       #
 
       class Return < Operation
-        extend T::Sig
+        class << self
+          extend T::Sig
 
-        sig { params(rets: T::Array[Value]).void }
-        def initialize(rets)
-          super(operands: rets)
+          sig { params(rets: T::Array[Value]).returns(Return) }
+          def build(rets = [])
+            new(operands: rets)
+          end
         end
       end
 
@@ -276,11 +287,13 @@ module NPC
       #
 
       class Constant < Operation
-        extend T::Sig
+        class << self
+          extend T::Sig
 
-        sig { params(type: Type, value: T.untyped).void }
-        def initialize(type, value)
-          super(attributes: { type: type, value: value }, results: [type])
+          sig { params(type: Type, value: T.untyped).returns(Constant) }
+          def build(type, value)
+            new(attributes: { type: type, value: value }, results: [type])
+          end
         end
       end
 
@@ -289,29 +302,35 @@ module NPC
       #
 
       class Add < Operation
-        extend T::Sig
-        include BinaryTrait
+        class << self
+          extend T::Sig
 
-        sig { params(lhs: Value, rhs: Value).void }
-        def initialize(lhs, rhs)
-          super(
-            operands: [lhs, rhs],
-            results: [lhs.type],
-          )
+          sig { params(lhs: Value, rhs: Value).returns(Add) }
+          def build(lhs, rhs)
+            super(
+              operands: [lhs, rhs],
+              results: [lhs.type],
+            )
+          end
         end
+
+        include BinaryTrait
       end
 
       class Sub < Operation
-        extend T::Sig
-        include BinaryTrait
+        class << self
+          extend T::Sig
 
-        sig { params(lhs: Value, rhs: Value).void }
-        def initialize(lhs, rhs)
-          super(
-            operands: [lhs, rhs],
-            results: [lhs.type],
-          )
+          sig { params(lhs: T.nilable(Value), rhs: T.nilable(Value)).returns(Sub) }
+          def build(lhs, rhs)
+            new(
+              operands: [lhs, rhs],
+              results:  [lhs&.type],
+            )
+          end
         end
+
+        include BinaryTrait
       end
 
       #
@@ -322,17 +341,17 @@ module NPC
       class I32Load < Operation
         class << self
           extend T::Sig
+
+          sig { params(base: Value, offset: Integer).returns(I32Load) }
+          def build(base, offset = 0)
+            new(
+              operands: [base],
+              attributes: { offset: offset },
+            )
+          end
         end
 
         extend T::Sig
-
-        sig { params(base: Value, offset: Integer).void }
-        def initialize(base, offset = 0)
-          super(
-            operands: [base],
-            attributes: { offset: offset },
-          )
-        end
 
         sig { returns(Operand) }
         def base_operand
@@ -356,19 +375,23 @@ module NPC
 
       # Store to a memory.
       class Store < Operation
-        extend T::Sig
+        class << self
+          extend T::Sig
 
-        sig { params(value: Value, base: Value, offset: Integer).void }
-        def initialize(value, base, offset: 0)
-          super(
-            operands: [value, base],
-            attributes: {
-              type: value.type,
-              offset: offset,
-              # align: align,
-            },
-          )
+          sig { params(value: Value, base: Value, offset: Integer).returns(Store) }
+          def build(value, base, offset: 0)
+            super(
+              operands: [value, base],
+              attributes: {
+                type: value.type,
+                offset: offset,
+                # align: align,
+              },
+            )
+          end
         end
+
+        extend T::Sig
 
         sig { returns(Operand) }
         def base_operand
@@ -390,166 +413,373 @@ module NPC
           T.cast(attribute(:offset), Integer)
         end
       end
-    end
 
-    #
-    # Local Operations
-    #
+      #
+      # Local Operations
+      #
 
-    # A local variable in the current function.
-    class Local
-      extend T::Sig
+      # A local variable in the current function.
+      class Local
+        extend T::Sig
 
-      sig { params(type: Type).void }
-      def initialize(type)
-        @type = T.let(type, Type)
+        sig { params(type: Type).void }
+        def initialize(type)
+          @type = T.let(type, Type)
+        end
+
+        sig { returns(Type) }
+        attr_accessor :type
       end
 
-      sig { returns(Type) }
-      attr_accessor :type
-    end
+      # Get a local variable.
+      class Get < Operation
+        class << self
+          extend T::Sig
 
-    # Get a local variable.
-    class Get < Operation
-      extend T::Sig
+          sig { params(local: Local).returns(Get) }
+          def build(local)
+            new(
+              attributes: {
+                local: local,
+              },
+              results: [local.type],
+            )
+          end
+        end
 
-      sig { params(local: Local).void }
-      def initialize(local)
-        super(
-          attributes: {
-            local: local,
-          },
-          results: [local.type]
-        )
+        extend T::Sig
+
+        sig { returns(String) }
+        def operation_name
+          "get"
+        end
+
+        sig { returns(Local) }
+        def local
+          T.cast(attribute(:local), Local)
+        end
+
+        sig { returns(Type) }
+        def type
+          local.type
+        end
+
+        sig { returns(Result) }
+        def value
+          result(0)
+        end
       end
 
-      sig { returns(String) }
-      def operation_name
-        "get"
+      # Set a local variable.
+      class Set < Operation
+        class << self
+          extend T::Sig
+
+          sig { params(local: Local, value: Value).returns(Set) }
+          def build(local, value)
+            super(
+              attributes: {},
+              operands:   [value],
+            )
+          end
+        end
+
+        extend T::Sig
+
+        sig { returns(Local) }
+        def local
+          T.cast(attribute(:local), Local)
+        end
+
+        sig { returns(Type) }
+        def type
+          local.type
+        end
+
+        sig { returns(Operand) }
+        def value_operand
+          operand(0)
+        end
+
+        sig { returns(T.nilable(Value)) }
+        def value
+          value_operand.get
+        end
+
+        sig { returns(Value) }
+        def value!
+          value_operand.get!
+        end
       end
 
-      sig { returns(Local) }
-      def local
-        T.cast(attribute(:local), Local)
+      #
+      # Lower-level, structure control flow operations.
+      #
+
+      # Create a label that can later be branched to via Br.
+      class BrLoop < Operation
+        class << self
+          extend T::Sig
+
+          sig { params(blocks: T.nilable(T::Array[Block])).returns(BrLoop) }
+          def build(blocks = nil)
+            op = new(
+              regions: [RegionKind::Exec],
+            )
+
+            if blocks
+              blocks.each { |block| op.body.append_block!(block) }
+            else
+              op.body.append_block!(Block.new)
+            end
+
+            op
+          end
+        end
+
+        extend T::Sig
+
+        sig { returns(Region) }
+        def body
+          region(0)
+        end
       end
 
-      sig { returns(Type) }
-      def type
-        local.type
+      #
+      # "Structure Control Flow" Operations
+      #
+
+      # Create a label that can later be branched out of, via Br.
+      class BrBlock < Operation
+        class << self
+          extend T::Sig
+
+          # By default, creates a body block.
+          sig { params(blocks: T.nilable(T::Array[Block])).returns(BrBlock) }
+          def build(blocks = nil)
+            op = new(
+              regions: [RegionKind::Exec],
+            )
+            if blocks.nil?
+              op.body.append_block!(Block.new)
+            else
+              blocks.each do |block|
+                op.body.append_block!(block)
+              end
+            end
+
+            op
+          end
+        end
+
+        extend T::Sig
+
+        sig { returns(Region) }
+        def body
+          region(0)
+        end
       end
 
-      sig { returns(Result) }
-      def value
-        result(0)
-      end
-    end
+      # Branch into the beginning of a loop, or out to the end of a block.
+      class Br < Operation
+        class << self
+          extend T::Sig
 
-    # Set a local variable.
-    class Set < Operation
-      extend T::Sig
+          sig { params(depth: Integer).returns(Br) }
+          def build(depth)
+            new(
+              attributes: {
+                depth: depth,
+              }
+            )
+          end
+        end
 
-      sig { params(local: Local, value: Value).void }
-      def initialize(local, value)
-        super(
-          attributes: {},
-          operands:   [value]
-        )
-      end
+        extend T::Sig
 
-      sig { returns(Local) }
-      def local
-        T.cast(attribute(:local), Local)
-      end
+        sig { returns(Integer) }
+        def depth
+          T.cast(attribute(:depth), Integer)
+        end
 
-      sig { returns(Type) }
-      def type
-        local.type
-      end
-
-      sig { returns(Operand) }
-      def value_operand
-        operand(0)
+        sig { params(value: Integer).returns(Integer) }
+        def depth=(value)
+          T.cast(set_attribute!(:depth, value), Integer)
+        end
       end
 
-      sig { returns(T.nilable(Value)) }
-      def value
-        value_operand.get
+      # Structured control flow in WASM.
+      class If < Operation
+        class << self
+          extend T::Sig
+
+          sig { params(test: T.nilable(Value)).returns(If) }
+          def build(test)
+            new(
+              operands: [test],
+              regions: [RegionKind::Exec, RegionKind::Exec]
+            )
+          end
+        end
+
+        sig { returns(Operand) }
+        def test_operand
+          operand(0)
+        end
+
+        sig { returns(T.nilable(Value)) }
+        def test
+          test_operand.get
+        end
+
+        sig { params(value: T.nilable(Value)).void }
+        def test=(value)
+          test_operand.reset!(value)
+        end
+
+        sig { returns(Region) }
+        def then_region
+          region(0)
+        end
+
+        sig { returns(Region) }
+        def else_region
+          region(0)
+        end
       end
 
-      sig { returns(Value) }
-      def value!
-        value_operand.get!
-      end
-    end
+      # A terminator that marks the end of a loop or block.
+      class End < Operation
+        class << self
+          extend T::Sig
 
-    #
-    # Lower-level, structure control flow operations.
-    #
-
-    # Create a label that can later be branched to via Br.
-    class BrLoop < Operation
-      extend T::Sig
-
-      sig { void }
-      def initialize
-        super(
-          regions: 1
-        )
+          sig { returns(End) }
+          def build
+            new
+          end
+        end
       end
 
-      sig { returns(Region) }
-      def body
-        region(0)
-      end
-    end
+      # Unstructured control flow.
+      class Goto < Operation
+        class << self
+          extend T::Sig
 
-    #
-    # "Structure Control Flow" Operations
-    #
+          sig { params(target: T.nilable(Block)).returns(Goto) }
+          def build(target = nil)
+            new(
+              block_operands: [target],
+            )
+          end
+        end
 
-    # Create a label that can later be branched out of, via Br.
-    class BrBlock < Operation
-      extend T::Sig
+        extend T::Sig
+        include Terminator
 
-      sig { void }
-      def initialize
-        super(
-          regions: 1,
-        )
-      end
+        sig { returns(BlockOperand) }
+        def target_block_operand
+          block_operand(0)
+        end
 
-      sig { returns(Region) }
-      def body
-        region(0)
-      end
-    end
+        sig { returns(T.nilable(Block)) }
+        def target
+          target_block_operand.get
+        end
 
-    # Branch into the beginning of a loop, or out to the end of a block.
-    class Br < Operation
-      extend T::Sig
+        sig { returns(Block) }
+        def target!
+          target_block_operand.get!
+        end
 
-      sig { params(depth: Integer).void }
-      def initialize(depth)
-        super(
-          attributes: {
-            depth: depth,
-          }
-        )
+        sig { params(block: T.nilable(Block)).void }
+        def target=(block)
+          target_block_operand.reset!(block)
+        end
       end
 
-      sig { returns(Integer) }
-      def depth
-        T.cast(attribute(:depth), Integer)
-      end
+      # Unstructured control flow.
+      class GotoIf < Operation
+        class << self
+          extend T::Sig
 
-      sig { params(value: Integer).returns(Integer) }
-      def depth=(value)
-        T.cast(set_attribute!(:depth, value), Integer)
-      end
-    end
+          sig do
+            params(
+              test: T.nilable(Value),
+              then_block: T.nilable(Block),
+              else_block: T.nilable(Block),
+            ).returns(GotoIf)
+          end
+          def build(test, then_block, else_block)
+            new(
+              operands: [test],
+              block_operands: [then_block, else_block],
+            )
+          end
+        end
 
-    class If < Operation
-      extend T::Sig
+        extend T::Sig
+        include Terminator
+
+        sig { returns(Operand) }
+        def test_operand
+          operand(0)
+        end
+
+        sig { returns(T.nilable(Value)) }
+        def test
+          test_operand.get
+        end
+
+        sig { returns(Value) }
+        def test!
+          test_operand.get!
+        end
+
+        sig { params(value: Value).void }
+        def test=(value)
+          test_operand.reset!(value)
+        end
+
+        sig { returns(T.nilable(Block)) }
+        def then_target
+          block_operand(0).get
+        end
+
+        sig { returns(Block) }
+        def then_target!
+          block_operand(0).get!
+        end
+
+        sig { params(block: T.nilable(Block)).void }
+        def then_target=(block)
+          block_operand(0).reset!(block)
+        end
+
+        sig { returns(BlockOperand) }
+        def then_target_block_operand
+          block_operand(0)
+        end
+
+        sig { returns(BlockOperand) }
+        def else_target_block_operand
+          block_operand(1)
+        end
+
+        sig { returns(T.nilable(Block)) }
+        def else_target
+          block_operand(1).get
+        end
+
+        sig { returns(Block) }
+        def else_target!
+          block_operand(1).get!
+        end
+
+        sig { params(block: T.nilable(Block)).void }
+        def else_target=(block)
+          block_operand(1).reset!(block)
+        end
+      end
     end
   end
 end

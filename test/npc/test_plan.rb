@@ -50,14 +50,14 @@ class TestPass < Minitest::Test
     plan = NPC::Plan.new
     plan.add(pass)
 
-    subplan = plan.nest(NPC::Core::Function)
+    subplan = plan.nest(NPC::ExIR::Function)
     subplan.add(pass)
     subplan.add(pass)
 
     plan.add(pass)
 
-    mod = NPC::Core::Module.new
-    fun = NPC::Core::Function.new("foo", [], [], loc: nil)
+    mod = NPC::ExIR::Module.build
+    fun = NPC::ExIR::Function.build
     mod.body_block.append_operation!(fun)
 
     plan.run(mod)

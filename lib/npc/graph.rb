@@ -6,6 +6,7 @@ module NPC
     extend T::Sig
     extend T::Helpers
     extend T::Generic
+    include Kernel
     abstract!
 
     # Return type must implement the {Iterator} interface.
@@ -122,6 +123,62 @@ module NPC
         node: node,
         iterator: node.successors_iter,
       )
+    end
+  end
+
+  # Depth first traversal of a graph in preorder, using a stack.
+  class PreOrderGraphIter
+    extend T::Sig
+    extend T::Helpers
+    extend T::Generic
+    include Iterator
+
+    Elem = type_member { { upper: GraphNode } }
+
+    sig { params(root: Elem).void }
+    def initialize(root)
+      @current = T.let(root, T.nilable(Elem))
+      @stack   = T.let([], T::Array[T.untyped])
+    end
+
+    # @!group Iterator Interface
+
+    sig { override.returns(Elem) }
+    def get
+      T.must(@current)
+    end
+
+    sig { override.void }
+    def advance!
+      if @current.nil?
+        raise "cannot advance past end of sequence"
+      end
+
+      # If the current node has any children, get the
+      # next child and put the iter on the stack.
+      iter = @current.successors_iter
+      if iter.more?
+        @current = iter.next!
+        if iter.more
+          @stack.push(iter)
+        end
+        return
+      end
+
+      # The current node has no children, get the next
+      # node from the stack.
+      iter = @stack.last
+      if iter
+        @current = iter.next!
+        @stack.pop if iter.done?
+      else
+        @current = nil
+      end
+    end
+
+    sig { override.returns(T::Boolean) }
+    def done?
+      @stack.empty?
     end
   end
 end

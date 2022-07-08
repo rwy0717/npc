@@ -72,29 +72,29 @@ module NPC
     def materialize; end
   end
 
-  class AbstractIntegerConstant < T::Struct
-    extend T::Sig
-    extend T::Helpers
-    include AbstractConstant
+  # class AbstractIntegerConstant < T::Struct
+  #   extend T::Sig
+  #   extend T::Helpers
+  #   include AbstractConstant
 
-    const :value, Integer
+  #   const :value, Integer
 
-    sig { override.returns(Operation) }
-    def materialize
-      Core::IntegerConstant.new(value)
-    end
-  end
+  #   sig { override.returns(Operation) }
+  #   def materialize
+  #     Core::IntegerConstant.new(value)
+  #   end
+  # end
 
-  class AbstractFloatConstant < T::Struct
-    extend T::Sig
-    extend T::Helpers
-    include AbstractConstant
+  # class AbstractFloatConstant < T::Struct
+  #   extend T::Sig
+  #   extend T::Helpers
+  #   include AbstractConstant
 
-    const :value, Float
+  #   const :value, Float
 
-    sig { override.returns(Operation) }
-    def materialize
-      raise "cannot materialze a float (unimplemented)"
-    end
-  end
+  #   sig { override.returns(Operation) }
+  #   def materialize
+  #     raise "cannot materialze a float (unimplemented)"
+  #   end
+  # end
 end

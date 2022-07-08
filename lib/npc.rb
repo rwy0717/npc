@@ -38,9 +38,9 @@ require("npc/operation")
 require("npc/printer")
 require("npc/pure")
 require("npc/region")
+require("npc/remap_table")
 require("npc/storage")
 require("npc/terminator")
-require("npc/translation")
 require("npc/trait")
 require("npc/traversal")
 require("npc/type")
@@ -57,7 +57,4 @@ require("npc/one_region")
 
 require("npc/analysis")
 require("npc/pass")
-
-# IR Dialects
-
-require("npc/core")
+require("npc/translation")

@@ -5,10 +5,7 @@ module NPC
   # A mixin in NPC for IR objects.
   module Trait
     extend T::Sig
-
-    class << self
-      extend T::Sig
-    end
+    extend T::Helpers
   end
 
   # A mixin for an operation.
@@ -16,7 +13,6 @@ module NPC
     extend T::Sig
     extend T::Helpers
     include Trait
-
     abstract!
 
     requires_ancestor { NPC::Operation }
@@ -27,7 +23,6 @@ module NPC
     extend T::Sig
     extend T::Helpers
     include Trait
-
     abstract!
 
     requires_ancestor { NPC::Type }

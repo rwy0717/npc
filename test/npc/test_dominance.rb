@@ -7,7 +7,7 @@ class TestDominatorTree < MiniTest::Test
   extend T::Sig
 
   def test_single_block
-    m = NPC::Core::Module.new("example")
+    m = NPC::ExIR::Module.build("example")
     b = m.region(0).first_block!
 
     tree = NPC::DominatorTree.new(m.region(0))
@@ -25,15 +25,15 @@ class TestDominatorTree < MiniTest::Test
 
   sig { void }
   def test_linear_cfg
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build
+    f = NPC::ExIR::Function.build
     m.region(0).first_block!.append_operation!(f)
     r = f.region(0)
 
     b0 = r.first_block!
     b1 = NPC::Block.new.insert_into_region!(r.back)
 
-    b0.append_operation!(NPC::Core::Goto.new(b1))
+    b0.append_operation!(NPC::ExIR::Goto.build(b1))
 
     tree = NPC::DominatorTree.new(r)
 
@@ -55,8 +55,8 @@ class TestDominatorTree < MiniTest::Test
   end
 
   def test_diamond_cfg
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build
+    f = NPC::ExIR::Function.build
     m.region(0).first_block!.append_operation!(f)
     r = f.region(0)
 
@@ -65,12 +65,12 @@ class TestDominatorTree < MiniTest::Test
     b2 = NPC::Block.new.insert_into_region!(r.back)
     b3 = NPC::Block.new.insert_into_region!(r.back)
 
-    t = NPC::Core::BoolConst.new(true)
+    t = NPC::ExIR.const.build(1)
 
     b0.append_operation!(t)
-    b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
-    b1.append_operation!(NPC::Core::Goto.new(b3))
-    b2.append_operation!(NPC::Core::Goto.new(b3))
+    b0.append_operation!(NPC::ExIR::GotoN.build(t.result(0), b1, b2))
+    b1.append_operation!(NPC::ExIR::Goto.build(b3))
+    b2.append_operation!(NPC::ExIR::Goto.build(b3))
 
     tree = NPC::DominatorTree.new(r)
 
@@ -117,16 +117,16 @@ class TestDominanceVerifier < Minitest::Test
 
   sig { void }
   def test_valid_single_block
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build("example")
+    f = NPC::ExIR::Function.build("test", [], [])
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
     b0 = r.first_block!
 
-    x = NPC::Core::I32Const.new(123)
-    y = NPC::Core::I32Const.new(456)
-    z = NPC::Core::I32Add.new(x.result, y.result)
+    x = NPC::ExIR::Const.build(123)
+    y = NPC::ExIR::Const.build(456)
+    z = NPC::ExIR::Add.build(x.result, y.result)
 
     b0.append_operation!(x)
     b0.append_operation!(y)
@@ -137,8 +137,8 @@ class TestDominanceVerifier < Minitest::Test
 
   sig { void }
   def test_valid_diamond
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build
+    f = NPC::ExIR::Function.build
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
@@ -147,33 +147,33 @@ class TestDominanceVerifier < Minitest::Test
     b2 = NPC::Block.new.insert_into_region!(r.back)
     b3 = NPC::Block.new.insert_into_region!(r.back)
 
-    t = NPC::Core::BoolConst.new(true)
-    x = NPC::Core::I32Const.new(123)
-    y = NPC::Core::I32Const.new(456)
+    t = NPC::ExIR::Const.build(000)
+    x = NPC::ExIR::Const.build(123)
+    y = NPC::ExIR::Const.build(456)
 
     b0.append_operation!(t)
     b0.append_operation!(x)
     b0.append_operation!(y)
-    b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
-    b1.append_operation!(NPC::Core::Goto.new(b3))
-    b2.append_operation!(NPC::Core::Goto.new(b3))
-    b3.append_operation!(NPC::Core::I32Add.new(x.result, y.result))
+    b0.append_operation!(NPC::ExIR::GotoN.build([b1, b2]))
+    b1.append_operation!(NPC::ExIR::Goto.build(b3))
+    b2.append_operation!(NPC::ExIR::Goto.build(b3))
+    b3.append_operation!(NPC::ExIR::Add.build(x.result, y.result))
 
     assert_nil(NPC::VerifyDominance.call(m))
   end
 
   sig { void }
   def test_invalid_single_block
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build
+    f = NPC::ExIR::Function.build
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
     b0 = r.first_block!
 
-    x = NPC::Core::I32Const.new(123)
-    y = NPC::Core::I32Const.new(456)
-    z = NPC::Core::I32Add.new(x.result, y.result)
+    x = NPC::ExIR::Const.build(123)
+    y = NPC::ExIR::Const.build(456)
+    z = NPC::ExIR::Add.build(x.result, y.result)
 
     b0.append_operation!(z)
     b0.append_operation!(x)
@@ -187,8 +187,8 @@ class TestDominanceVerifier < Minitest::Test
 
   sig { void }
   def test_invalid_diamond
-    m = NPC::Core::Module.new("example")
-    f = NPC::Core::Function.new("test", [], [])
+    m = NPC::ExIR::Module.build
+    f = NPC::ExIR::Function.build
       .insert_into_block!(m.region(0).first_block!.back)
     r = f.region(0)
 
@@ -197,20 +197,20 @@ class TestDominanceVerifier < Minitest::Test
     b2 = NPC::Block.new.insert_into_region!(r.back)
     b3 = NPC::Block.new.insert_into_region!(r.back)
 
-    t = NPC::Core::BoolConst.new(true)
-    x = NPC::Core::I32Const.new(123)
-    y = NPC::Core::I32Const.new(456)
+    t = NPC::ExIR::Constant.build(true)
+    x = NPC::ExIR::Const.build(123)
+    y = NPC::ExIR::Const.build(456)
 
     b0.append_operation!(t)
-    b0.append_operation!(NPC::Core::BranchIf.new(t.result(0), b1, b2))
+    b0.append_operation!(NPC::ExIR::GotoN.build(t.result(0), [b1, b2]))
 
     b1.append_operation!(x)
-    b1.append_operation!(NPC::Core::Goto.new(b3))
+    b1.append_operation!(NPC::ExIR::Goto.build(b3))
 
     b2.append_operation!(y)
-    b2.append_operation!(NPC::Core::Goto.new(b3))
+    b2.append_operation!(NPC::ExIR::Goto.build(b3))
 
-    z = NPC::Core::I32Add.new(x.result, y.result)
+    z = NPC::ExIR::Add.build(x.result, y.result)
     b3.append_operation!(z)
 
     error = NPC::VerifyDominance.call(m)&.root_cause

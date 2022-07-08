@@ -4,16 +4,20 @@
 module BF
   module IR
     class Program < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Program) }
+        def build
+          op = new(regions: [NPC::RegionKind::Exec])
+          op.body_region.append_block!(NPC::Block.new)
+          op
+        end
+      end
+
       extend T::Sig
       extend T::Helpers
-      # include NPC::NoResult
       include NPC::NoTerminator
-
-      sig { void }
-      def initialize
-        super(regions: [NPC::RegionKind::Exec])
-        body_region.append_block!(NPC::Block.new)
-      end
 
       sig { returns(NPC::Region) }
       def body_region
@@ -42,71 +46,102 @@ module BF
     end
 
     class Inc < NPC::Operation
-      extend T::Sig
-      include AmountAttribute
+      class << self
+        extend T::Sig
 
-      sig { params(amount: Integer).void }
-      def initialize(amount = 1)
-        super(
-          attributes: {
-            amount: amount,
-          }
-        )
+        sig { params(amount: Integer).returns(Inc) }
+        def build(amount = 1)
+          new(
+            attributes: {
+              amount: amount,
+            }
+          )
+        end
       end
+
+      include AmountAttribute
     end
 
     class Dec < NPC::Operation
-      extend T::Sig
-      include AmountAttribute
+      class << self
+        extend T::Sig
 
-      sig { params(amount: Integer).void }
-      def initialize(amount = 1)
-        super(
-          attributes: {
-            amount: amount,
-          }
-        )
+        sig { params(amount: Integer).returns(Dec) }
+        def build(amount = 1)
+          super(
+            attributes: {
+              amount: amount,
+            }
+          )
+        end
       end
+
+      include AmountAttribute
     end
 
     class MoveL < NPC::Operation
-      extend T::Sig
-      include AmountAttribute
+      class << self
+        extend T::Sig
 
-      sig { params(amount: Integer).void }
-      def initialize(amount = 1)
-        super(
-          attributes: {
-            amount: amount,
-          }
-        )
+        sig { params(amount: Integer).returns(MoveL) }
+        def build(amount = 1)
+          new(attributes: { amount: amount })
+        end
       end
+
+      include AmountAttribute
     end
 
     class MoveR < NPC::Operation
-      extend T::Sig
-      include AmountAttribute
+      class << self
+        extend T::Sig
 
-      sig { params(amount: Integer).void }
-      def initialize(amount = 1)
-        super(attributes: { amount: amount })
+        sig { params(amount: Integer).returns(MoveR) }
+        def build(amount = 1)
+          new(attributes: { amount: amount })
+        end
+      end
+
+      include AmountAttribute
+    end
+
+    class Print < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Print) }
+        def build
+          new
+        end
       end
     end
 
-    class Print < NPC::Operation; end
+    class Read < NPC::Operation
+      class << self
+        extend T::Sig
 
-    class Read < NPC::Operation; end
+        sig { returns(Read) }
+        def build
+          new
+        end
+      end
+    end
 
     class Loop < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Loop) }
+        def build
+          op = new(regions: [NPC::RegionKind::Exec])
+          op.region(0).append_block!(NPC::Block.new)
+          op
+        end
+      end
+
       extend T::Sig
       include NPC::OneRegion
       include NPC::NoTerminator
-
-      sig { void }
-      def initialize
-        super(regions: [NPC::RegionKind::Exec])
-        region(0).append_block!(NPC::Block.new)
-      end
 
       sig { returns(NPC::Block) }
       def body
@@ -117,24 +152,71 @@ module BF
     # Extended IR
 
     class While < NPC::Operation
-      extend T::Sig
+      class << self
+        extend T::Sig
+
+        sig { returns(While) }
+        def build
+          new(regions: [NPC::RegionKind::Exec])
+        end
+      end
 
       include NPC::OneRegion
+    end
 
-      sig { void }
-      def initialize
-        super(regions: 1)
+    class Add < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Add) }
+        def build
+          new
+        end
       end
     end
 
-    class Add < NPC::Operation; end
+    class Sub < NPC::Operation
+      class << self
+        extend T::Sig
 
-    class Sub < NPC::Operation; end
+        sig { returns(Sub) }
+        def build
+          new
+        end
+      end
+    end
 
-    class Store < NPC::Operation; end
+    class Store < NPC::Operation
+      class << self
+        extend T::Sig
 
-    class Load < NPC::Operation; end
+        sig { returns(Store) }
+        def build
+          new
+        end
+      end
+    end
 
-    class Move < NPC::Operation; end
+    class Load < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Load) }
+        def build
+          new
+        end
+      end
+    end
+
+    class Move < NPC::Operation
+      class << self
+        extend T::Sig
+
+        sig { returns(Move) }
+        def build
+          Move.new
+        end
+      end
+    end
   end
 end

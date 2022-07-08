@@ -55,9 +55,7 @@ module NPC
 
     # The set of blocks in this loop.
     sig { returns(T::Array[Block]) }
-    def blocks
-      @blocks
-    end
+    attr_reader :blocks
 
     # Is the given block in this loop?
     # This loops including blocks located in nested loops.
@@ -217,6 +215,17 @@ module NPC
         result << predecessor if exclude?(predecessor)
       end
       result
+    end
+
+    sig { returns(T.nilable(Block)) }
+    def entering_block
+      blocks = entering_blocks
+      blocks.first if blocks.length == 1
+    end
+
+    sig { returns(Block) }
+    def entering_block!
+      T.must(entering_block)
     end
   end
 
@@ -424,6 +433,11 @@ module NPC
     sig { params(region: Region).returns(RegionLoopInfo) }
     def for_region(region)
       @region_table[region] ||= RegionLoopInfo.new(region, dominator_tree(region))
+    end
+
+    sig { params(block: Block).returns(T.nilable(Loop)) }
+    def loop_for(block)
+      for_region(block.parent_region!).loop_for(block)
     end
 
     private

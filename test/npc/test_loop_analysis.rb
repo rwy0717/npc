@@ -5,14 +5,14 @@ require_relative("./test")
 
 class TestLoopAnalysis < MiniTest::Test
   def test_minimal_loop
-    mod = NPC::ExIR::Module.new
-    fun = NPC::ExIR::Function.new
+    mod = NPC::ExIR::Module.build
+    fun = NPC::ExIR::Function.build
     mod.region(0).first_block!.append_operation!(fun)
 
     region = fun.region(0)
 
     b0     = region.first_block!
-    b0.append_operation!(NPC::ExIR::Goto.new(b0))
+    b0.append_operation!(NPC::ExIR::Goto.build(b0))
 
     dominance_info   = NPC::Dominance.new
     loop_info        = NPC::LoopInfo.new(dominance_info)
@@ -28,19 +28,28 @@ class TestLoopAnalysis < MiniTest::Test
     assert_equal(b0, loop.header_block)
     assert_equal([b0], loop.blocks)
     assert_equal([b0], loop.latch_blocks)
-    assert_equal([], loop.exit_blocks)
-    assert_equal([], loop.exiting_blocks)
+    assert_empty(loop.exit_blocks)
+    assert_empty(loop.exiting_blocks)
     assert_empty(loop.children)
     assert_nil(loop.parent)
   end
 
   # a test where all the different parts of a loop are different blocks.
   def test_full_loop
-    mod = NPC::ExIR::Module.new
-    fun = NPC::ExIR::Function.new
+    mod = NPC::ExIR::Module.build
+    fun = NPC::ExIR::Function.build
     mod.region(0).first_block!.append_operation!(fun)
 
     region = fun.region(0)
+
+    #    v
+    #  header <---------+
+    #    v              |
+    # interior          |
+    #    v              |
+    #  exiting > latch -+
+    #    v
+    #   exit
 
     entering_block = region.first_block!
     header_block   = NPC::Block.new
@@ -48,19 +57,19 @@ class TestLoopAnalysis < MiniTest::Test
     latch_block    = NPC::Block.new
     exiting_block  = NPC::Block.new
     exit_block     = NPC::Block.new
-  
-    entering_block.append_operation!(NPC::ExIR::Goto.new(header_block))
-    header_block.append_operation!(NPC::ExIR::Goto.new(interior_block))
-    interior_block.append_operation!(NPC::ExIR::Goto.new(exiting_block))
-    exiting_block.append_operation!(NPC::ExIR::GotoN.new([latch_block, exit_block]))
-    latch_block.append_operation!(NPC::ExIR::Goto.new(header_block))
-    exit_block.append_operation!(NPC::ExIR::Return.new)
 
     region.append_block!(header_block)
     region.append_block!(interior_block)
     region.append_block!(exiting_block)
     region.append_block!(latch_block)
     region.append_block!(exit_block)
+
+    entering_block.append_operation!(NPC::ExIR::Goto.build(header_block))
+    header_block.append_operation!(NPC::ExIR::Goto.build(interior_block))
+    interior_block.append_operation!(NPC::ExIR::Goto.build(exiting_block))
+    exiting_block.append_operation!(NPC::ExIR::GotoN.build([latch_block, exit_block]))
+    latch_block.append_operation!(NPC::ExIR::Goto.build(header_block))
+    exit_block.append_operation!(NPC::ExIR::Return.build)
 
     dominance_info   = NPC::Dominance.new
     loop_info        = NPC::LoopInfo.new(dominance_info)

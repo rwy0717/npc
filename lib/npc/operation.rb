@@ -6,6 +6,41 @@ require("npc/operand")
 require("npc/result")
 
 module NPC
+  # The interface of a class that implements an operation.
+  module OperationClass
+    extend T::Sig
+    extend T::Helpers
+    include Kernel
+    interface!
+
+    # sig do
+    #   abstract.params(
+    #     results:        T::Array[Type],
+    #     operands:       T::Array[T.nilable(Value)],
+    #     attributes:     T::Hash[Symbol, T.untyped],
+    #     block_operands: T::Array[T.nilable(Block)],
+    #     regions:        T::Array[RegionKind],
+    #   ).void
+    # end
+    # def new(
+    #   results:        [],
+    #   operands:       [],
+    #   attributes:     {},
+    #   block_operands: [],
+    #   regions:        [],
+    #   loc: nil
+    # )
+    # end
+  end
+
+  module OperationBase
+    extend T::Sig
+    extend T::Helpers
+    include Kernel
+    interface!
+    mixes_in_class_methods(OperationClass)
+  end
+
   # @api private
   # The interface for the intrusive-linked-list that chains together all operations in a block.
   module OperationLink
@@ -251,6 +286,7 @@ module NPC
   class Operation
     extend T::Sig
     extend T::Helpers
+    include OperationBase
     include Define
     include OperationLink
 
@@ -275,22 +311,30 @@ module NPC
       end
     end
 
-    sig do
+    # Construct an operation from it's parts.
+    # This method is final because, we always have to be able
+    # to construct an operation from it's IR subobjects,
+    # to perform operation cloning and parsing.
+    #
+    # For this same reason, it is dangerous to add any state beyond
+    # what is passed in to this constructor. Any additional state
+    # won't be cloned or printed.
+    sig(:final) do
       params(
-        results: T::Array[Type],
-        operands: T::Array[T.nilable(Value)],
-        attributes: T::Hash[Symbol, T.untyped],
+        results:        T::Array[T.nilable(Type)],
+        operands:       T::Array[T.nilable(Value)],
+        attributes:     T::Hash[Symbol, T.untyped],
         block_operands: T::Array[T.nilable(Block)],
-        regions: T::Array[RegionKind],
-        loc: T.nilable(Location),
+        regions:        T::Array[RegionKind],
+        loc:            T.nilable(Location),
       ).void
     end
     def initialize(
-      results: [],
-      operands: [],
-      attributes: {},
+      results:        [],
+      operands:       [],
+      attributes:     {},
       block_operands: [],
-      regions: [],
+      regions:        [],
       loc: nil
     )
       @operands = T.let([], T::Array[Operand])
@@ -362,12 +406,37 @@ module NPC
     sig { returns(T::Array[BlockOperand]) }
     attr_reader :block_operands
 
+    sig { params(index: Integer).returns(BlockOperand) }
+    def block_operand(index)
+      T.must(@block_operands[index])
+    end
+
     # Push a new block-operand onto the end of the block-operand array.
     sig { params(target: T.nilable(Block)).returns(BlockOperand) }
     def new_block_operand(target = nil)
-      block_operand = BlockOperand.new(self, block_operands.length, target)
-      block_operands << block_operand
+      block_operand = BlockOperand.new(nil, target)
+      append_block_operand!(block_operand)
       block_operand
+    end
+
+    sig { params(block_operand: BlockOperand).void }
+    def append_block_operand!(block_operand)
+      if block_operand.parent_operation
+        raise "block operand already owned by operation"
+      end
+
+      block_operand.parent_operation = self
+      block_operands << block_operand
+    end
+
+    sig { params(block_operand: BlockOperand).void }
+    def remove_block_operand!(block_operand)
+      if block_operand.parent_operation != self
+        raise "block operand not owned by this operation"
+      end
+
+      block_operands.remove(block_operand)
+      block_operand.parent_operation = nil
     end
 
     # The blocks that are reachable from this op.
@@ -392,6 +461,27 @@ module NPC
     sig { params(index: Integer).returns(Region) }
     def region(index)
       @regions.fetch(index)
+    end
+
+    sig { params(region: Region).void }
+    def append_region!(region)
+      if region.parent_operation
+        raise "region already belongs to an operation"
+      end
+
+      @regions.append(region)
+      region.parent_operation = self
+      self
+    end
+
+    sig { params(region: Region).void }
+    def remove_region!(region)
+      if region.parent_operation != self
+        raise "region does not belong to operation"
+      end
+
+      @regions.remove(region)
+      region.parent_operation = nil
     end
 
     # @!group Parent Block, Next/Prev Operation in Block
@@ -517,9 +607,29 @@ module NPC
     # Push a new operand onto the end of the operand array.
     sig { params(target: T.nilable(Value)).returns(Operand) }
     def new_operand(target = nil)
-      operand = Operand.new(self, operands.length, target)
-      operands << operand
+      operand = Operand.new(nil, target)
+      append_operand!(operand)
       operand
+    end
+
+    sig { params(operand: Operand).void }
+    def append_operand!(operand)
+      if operand.parent_operation
+        raise "operand already owned by operation"
+      end
+
+      operand.parent_operation = self
+      operands << operand
+    end
+
+    sig { params(operand: Operand).void }
+    def remove_operand!(operand)
+      if operand.parent_operation != self
+        raise "operand not owned by this operation"
+      end
+
+      operands.remove(operand)
+      operand.parent_operation = nil
     end
 
     # @!group Results
@@ -541,11 +651,31 @@ module NPC
     end
 
     # Push a new result onto the end of the result array.
-    sig { params(type: Type).returns(Result) }
-    def new_result(type)
-      result = Result.new(self, results.length, type)
+    sig { params(type: T.nilable(Type)).returns(Result) }
+    def new_result(type = nil)
+      result = Result.new(self, type)
       results << result
       result
+    end
+
+    sig { params(result: Result).void }
+    def append_result!(result)
+      if result.parent_operation
+        raise "result already owned by operation"
+      end
+
+      result.parent_operation = self
+      results << result
+    end
+
+    sig { params(result: Result).void }
+    def remove_result!(result)
+      if result.parent_operation != self
+        raise "result not owned by operation"
+      end
+
+      results.remove(result)
+      result.parent_operation = nil
     end
 
     # True if the result passed in, is a result of this operation.
@@ -591,6 +721,10 @@ module NPC
     end
 
     # @!group Dropping and Destruction of Operation
+
+    sig { void }
+    def drop_inputs
+    end
 
     # Drop this operation. Remove it from the block, clear it's inputs, and drop all it's uses.
     sig { void }
@@ -645,6 +779,55 @@ module NPC
       operation
     end
 
+    # if clone_operands is false, then the new op will not have any operands.
+    # if clone_regions is false, then the new op will not have any regions.
+    sig do
+      params(
+        remap_table:    RemapTable,
+        clone_regions:  T::Boolean,
+        clone_operands: T::Boolean,
+      ).returns(T.self_type)
+    end
+    def clone(remap_table = RemapTable.new, clone_regions: true, clone_operands: true)
+      klass = self.class
+      raise "cannot clone this operation" unless klass.is_a?(OperationClass)
+
+      clone = klass.new
+
+      attributes.each do |key, val|
+        clone.set_attribute!(key, val)
+      end
+
+      results.each do |result|
+        clone_result = Result.new(nil, result.type)
+        clone.append_result!(clone_result)
+        remap_table.remap_value!(result, clone_result)
+      end
+
+      block_operands.each do |block_operand|
+        remapped_target     = remap_table.get_block(block_operand.get)
+        clone_block_operand = BlockOperand.new(nil, remapped_target)
+        clone.append_block_operand!(clone_block_operand)
+      end
+
+      if clone_operands
+        operands.each do |operand|
+          clone_target  = remap_table.get_value(operand.get)
+          clone_operand = Operand.new(nil, clone_target)
+          clone.append_operand!(clone_operand)
+        end
+      end
+
+      if clone_regions
+        regions.each do |region|
+          clone_region = region.clone(remap_table)
+          clone.append_region!(clone_region)
+        end
+      end
+
+      clone
+    end
+
     # @!group validation
 
     sig { returns(T::Boolean) }
@@ -678,7 +861,7 @@ module NPC
 
     sig { returns(String) }
     def to_s
-      id = "%016x" % object_id
+      id = format("%016x", object_id)
       "#<#{self.class.name}:0x#{id}>"
     end
   end

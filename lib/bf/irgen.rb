@@ -6,14 +6,14 @@ require("bf/ir")
 module BF
   ## Translates a BF program into IR
   class ProgramImporter
-    include NPC::Importer
+    # include NPC::Importer
     include Singleton
 
     extend T::Sig
 
     sig { params(prog: String).returns(IR::Program) }
     def run(prog)
-      program = IR::Program.new
+      program = IR::Program.build
       stack = []
       b = NPC::Builder.at_back(program.body)
       i = 0

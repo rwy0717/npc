@@ -9,14 +9,12 @@ module NPC
 
     sig do
       params(
-        owning_operation: Operation,
-        index: Integer,
-        target: T.nilable(Value),
+        parent_operation: T.nilable(Operation),
+        target:           T.nilable(Value),
       ).void
     end
-    def initialize(owning_operation, index, target = nil)
-      @owning_operation = T.let(owning_operation, Operation)
-      @index = T.let(index, Integer)
+    def initialize(parent_operation = nil, target = nil)
+      @parent_operation = T.let(parent_operation, T.nilable(Operation))
       @target = T.let(nil, T.nilable(Value))
       @prev_use = T.let(nil, T.nilable(Operand))
       @next_use = T.let(nil, T.nilable(Operand))
@@ -25,12 +23,19 @@ module NPC
     end
 
     # The operation that this operand belongs to.
+    sig { returns(T.nilable(Operation)) }
+    attr_accessor :parent_operation
+
     sig { returns(Operation) }
-    attr_reader :owning_operation
+    def parent_operation!
+      T.must(@parent_operation)
+    end
 
     # This operand's index in the operation's operand array.
-    sig { returns(Integer) }
-    attr_reader :index
+    sig { returns(T.nilable(Integer)) }
+    def index
+      @parent_operation&.operands&.find_index(self)
+    end
 
     # The previous operand in the target value's list of uses.
     sig { returns(T.nilable(Operand)) }

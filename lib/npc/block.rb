@@ -193,7 +193,8 @@ module NPC
     sig { override.params(proc: T.proc.params(arg0: Operation).returns(BasicObject)).returns(BasicObject) }
     def each(&proc)
       @uses.each do |use|
-        proc.call(use.owning_operation)
+        user = use.parent_operation
+        proc.call(user) if user
       end
     end
   end
@@ -320,12 +321,31 @@ module NPC
     end
 
     ## Append a new argument to this block. Returns the new argument.
-    sig { params(type: Type).returns(Argument) }
+    sig { params(type: T.nilable(Type)).returns(Argument) }
     def add_argument(type)
-      i = arguments.length
-      a = Argument.new(self, i, type)
+      a = Argument.new(self, type)
       arguments << a
       a
+    end
+
+    sig { params(argument: Argument).void }
+    def append_argument!(argument)
+      if argument.parent_block
+        raise "argument already owned by block"
+      end
+
+      argument.parent_block = self
+      arguments.append(argument)
+    end
+
+    sig { params(argument: Argument).void }
+    def delete_argument!(argument)
+      if argument.parent_block != self
+        raise "argument not owned by this block"
+      end
+
+      arguments.delete(argument)
+      argument.parent_block = nil
     end
 
     ### Operation Management
@@ -385,6 +405,13 @@ module NPC
       op if op.is_a?(Operation) && op.is_a?(Terminator)
     end
 
+    # The operation that terminates this block
+    # Nil if the block is empty, or if the last operation is not a Terminator.
+    sig { returns(T.nilable(Operation)) }
+    def terminator!
+      T.must(terminator)
+    end
+
     # Does this block contain any operations?
     sig { returns(T::Boolean) }
     def empty?
@@ -405,12 +432,16 @@ module NPC
       OperationsInBlock.new(self)
     end
 
+    # Prepend an operation to this block.
+    # The operation must not be in a block.
     sig { params(operation: Operation).returns(Block) }
     def prepend_operation!(operation)
       operation.insert_into_block!(front)
       self
     end
 
+    # Append an operation.
+    # The operation must not be in a block.
     sig { params(operation: Operation).returns(Block) }
     def append_operation!(operation)
       operation.insert_into_block!(back)
@@ -422,6 +453,24 @@ module NPC
       raise "operation is not a child of this block" if self != operation.parent_block
 
       operation.remove_from_block!
+      self
+    end
+
+    # Move the operations from another block into this block, at the front.
+    sig { params(block: Block).returns(Block) }
+    def prepend_operations_from_block!(block)
+      block.operations.each do |operation|
+        operation.move!(front)
+      end
+      self
+    end
+
+    # Move the operations from another block into this block, at the back.
+    sig { params(block: Block).returns(Block) }
+    def append_operations_from_block!(block)
+      block.operations.each do |operation|
+        operation.move!(back)
+      end
       self
     end
 
@@ -473,7 +522,7 @@ module NPC
       preds = []
       use = T.let(@first_use, T.nilable(BlockOperand))
       while use
-        block = use.owning_operation.parent_block
+        block = use.parent_operation&.parent_block
         preds << block if block
         use = use.next_use
       end
@@ -527,7 +576,7 @@ module NPC
 
     sig { returns(String) }
     def to_s
-      id = "%016x" % object_id
+      id = format("%016x", object_id)
       "#<#{self.class.name}:0x#{id}>"
     end
 

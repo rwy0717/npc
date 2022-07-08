@@ -329,9 +329,15 @@ module NPC
     def value_dominates?(value, operation)
       case value
       when Argument
-        block_dominates?(value.owning_block, operation.parent_block!)
+        defining_block = value.parent_block
+        return false unless defining_block
+
+        block_dominates?(defining_block, operation.parent_block!)
       when Result
-        dominates?(value.owning_operation, operation, strict: true)
+        defining_operation = value.parent_operation
+        return false unless defining_operation
+
+        dominates?(defining_operation, operation, strict: true)
       else
         raise "Unknown class #{value.class.name}"
       end

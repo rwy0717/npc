@@ -8,36 +8,36 @@ class TestPrinter < Minitest::Test
 
   sig { void }
   def test_print
-    m = NPC::Core::Module.new("example")
+    m = NPC::ExIR::Module.build
 
     # Function 1
 
-    f = NPC::Core::Function.new("test", [], [])
+    f = NPC::ExIR::Function.build
     m.region(0).first_block!.append_operation!(f)
 
     b1 = NPC::Builder.new(f.region(0).first_block!.front)
 
-    x = b1.insert!(NPC::Core::I32Const.new(123))
-    y = b1.insert!(NPC::Core::I32Const.new(456))
-    z = b1.insert!(NPC::Core::I32Add.new(x.result(0), y.result(0)))
+    x = b1.insert!(NPC::ExIR::Const.build(123))
+    y = b1.insert!(NPC::ExIR::Const.build(456))
+    z = b1.insert!(NPC::ExIR::Add.build(x.result(0), y.result(0)))
 
-    block = NPC::Block.new([NPC::Core::I32, NPC::Core::I32])
+    block = NPC::Block.new([NPC::ExIR::Num, NPC::ExIR::Num])
     f.region(0).append_block!(block)
-    b1.insert!(NPC::Core::Goto.new(block, [y.result, z.result]))
+    b1.insert!(NPC::ExIR::Goto.build(block, [y.result, z.result]))
 
-    block.append_operation!(NPC::Core::I32Const.new(111))
-    block.append_operation!(NPC::Core::Return.new(block.argument(0)))
+    block.append_operation!(NPC::ExIR::Const.build(111))
+    block.append_operation!(NPC::ExIR::Return.build([block.argument(0)]))
 
     # Function 2
 
-    f2 = NPC::Core::Function.new("another_test", [], [])
-    f2.region(0).first_block!.add_argument(NPC::Core::I32)
+    f2 = NPC::ExIR::Function.build
+    f2.region(0).first_block!.add_argument(NPC::ExIR::Num)
 
     m.region(0).first_block!.append_operation!(f2)
 
     b2 = NPC::Builder.new(f2.region(0).first_block!.front)
-    k = b2.insert!(NPC::Core::I32Const.new(789))
-    b2.insert!(NPC::Core::Return.new(k.result))
+    k = b2.insert!(NPC::ExIR::Const.build(789))
+    b2.insert!(NPC::ExIR::Return.build([k.result]))
 
     NPC::Printer.print_operation(m)
 
