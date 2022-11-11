@@ -35,8 +35,8 @@ module NPC
         @blocks = T.let(blocks, T::Set[Block])
         @table  = T.let({},     T::Hash[Block, T::Set[Block]])
 
-        @loop_blocks          = T.let(Set[], T::Set[Block])
-        @loop_header_blocks   = T.let(Set[], T::Set[Block])
+        @loop_blocks = T.let(Set[], T::Set[Block])
+        @loop_entry_blocks = T.let(Set[], T::Set[Block])
         @loop_entering_blocks = T.let(Set[], T::Set[Block])
       end
 
@@ -84,7 +84,7 @@ module NPC
 
       # The blocks that are reachable from outside the loop.
       sig { returns(T::Set[Block]) }
-      attr_reader :loop_header_blocks
+      attr_reader :loop_entry_blocks
 
       # The blocks that enter a loop from outside.
       sig { returns(T::Set[Block]) }
@@ -141,8 +141,8 @@ module NPC
 
         raise "entry point is a looping block" if loop_blocks.include?(@entry)
 
-        # 3) Find the "loop header blocks" and "loop entering blocks"
-        # Loop header blocks: these are the blocks inside loops that are branched to from outside the loop.
+        # 3) Find the "loop entry blocks" and "loop entering blocks"
+        # Loop entry blocks: these are the blocks inside loops that are branched to from outside the loop.
         # Loop entering blocks: blocks that branch to a loop header, from outside the loop.
 
         loop_blocks.each do |block|
@@ -150,7 +150,7 @@ module NPC
             # If the predecessor is not reachable from the block,
             # then the predecessor is
             unless reachable?(block, predecessor)
-              loop_header_blocks.add(block)
+              loop_entry_blocks.add(block)
               loop_entering_blocks.add(predecessor)
             end
           end
@@ -254,23 +254,27 @@ module NPC
           # c -> b
 
           graph.blocks.each do |block|
-            next unless graph.loop_header_blocks.include?(block)
+            next unless graph.loop_entry_blocks.include?(block)
 
             mutual_loop_headers = T.let(Set[], T::Set[Block])
-            graph.loop_header_blocks.each do |other|
+            graph.loop_entry_blocks.each do |other|
               if other != block && graph.mutually_reachable?(block, other)
                 mutual_loop_headers.add(other)
               end
             end
 
-            if mutual_loop_headers.any?
-              make_single_entry_loop(mutual)
-            end
+            next unless mutual_loop_headers.any?
+
+            make_single_entry_loop(mutual)
+            changed = true
+            break
           end
+
+          continue if changed = true
         end
       end
 
-      # given a
+      # Take a loop with multiple entries, and convert it into a single entry, by cloning blocks.
       # sig do
       #   params(
       #     region:  Region,
@@ -278,7 +282,20 @@ module NPC
       #   )
       # end
       # def make_single_entry_loop(region, entries, blocks, graph)
-      #   region.asfd
+      #   # Entry blocks, sorted in order.
+      #   entry_blocks = blocks.select do |block|
+      #     entries.include?(block)
+      #   end
+
+      #   dispatch = Block.new
+      #   region.append_block!(dispatch)
+      #   blocks.add(dispatch)
+
+      #   local        = IR::Local.new
+      #   get_local_op = IR::Get.build(local)
+      #   branch_op    = IR::BrTable.build
+
+      #   indices =
       # end
     end
   end

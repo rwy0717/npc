@@ -20,9 +20,12 @@ module NPC
   end
 end
 
-# Base Library
+# Utilities
 
+require("npc/format")
 require("npc/iteration")
+
+# Core Library
 
 require("npc/argument")
 require("npc/block")

@@ -559,11 +559,20 @@ module NPC
 
     sig { returns(T::Boolean) }
     def no_successors?
-      t = terminator
-      return true unless t
-
-      t.block_operands.none?
+      !any_successors?
     end
+
+    #
+    # Copying
+    #
+
+    # sig { params(remap_table: RemapTable).returns(Block) }
+    # def clone(remap_table: RemapTable.new)
+    #   clone = Block.new
+    #   operations.each do |_operation|
+    #     clone.append_operation!
+    #   end
+    # end
 
     #
     # Printing
@@ -586,3 +595,4 @@ module NPC
     end
   end
 end
+# end

@@ -9,7 +9,6 @@ module NPC
       #
       # Helper Traits
       #
-
       module BinaryTrait
         extend T::Sig
         include OperationTrait
@@ -608,6 +607,17 @@ module NPC
         end
       end
 
+      class BrTable < Operation
+        class << self
+          extend T::Sig
+
+          sig { void }
+          def build
+            new
+          end
+        end
+      end
+
       # Structured control flow in WASM.
       class If < Operation
         class << self
@@ -778,6 +788,64 @@ module NPC
         sig { params(block: T.nilable(Block)).void }
         def else_target=(block)
           block_operand(1).reset!(block)
+        end
+      end
+
+      # Unstructured, tabled switch statement.
+      class Switch < Operation
+        class Case
+          extend T::Sig
+
+          sig do
+            params(
+              value: Integer,
+              target: T.nilable(Block),
+              arguments: T::Array[T.nilable(Operand)]
+            ).void
+          end
+          def initialize(value, target, arguments = [])
+            @value     = T.let(value, Integer)
+            @target    = T.let(target, Block)
+            @arguments = T.let(arguments, T::Array[Operand])
+          end
+
+          sig { returns(Integer) }
+          attr_accessor
+        end
+
+        class << self
+          extend T::Sig
+
+          sig { params(cases: T::Array[Case]).void }
+          def build(cases)
+            new
+
+            cases.each do |c|
+            end
+          end
+        end
+
+        extend T::Sig
+        extend T::Helpers
+
+        sig { returns(BlockOperand) }
+        def default_block_operand
+          block_operand(0)
+        end
+
+        sig { returns(T.nilable(Block)) }
+        def default_block
+          default_block_operand.get
+        end
+
+        sig { params(index: Integer).returns(BlockOperand) }
+        def case_block_operand(index)
+          block_operand(index + 1)
+        end
+
+        sig { params(index: Integer).returns(T.nilable(Block)) }
+        def case_block(index)
+          case_block_operand(index).get
         end
       end
     end
